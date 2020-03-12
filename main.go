@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"os/exec"
 )
-type cron struct {
-    command string
-	exitCode int
-	output []byte
-	valid bool
-}
+
 func main() {
 	executable := flag.String("exec", "", "Command to execute")
 	flag.Parse()
-	crontask := createCron(*executable)
-	if crontask.valid {
+	crontask := Cron{
+       command: *executable,
+    }
+	if crontask.Validate() {
 		cmd := exec.Command("bash", "-c", crontask.command)
 		fmt.Printf("Command \"%s\" started!\n", crontask.command)
 		fmt.Printf("------ OUTPUT BEGIN\n")
@@ -31,15 +28,4 @@ func main() {
 		fmt.Printf("------ OUTPUT END %d\n", crontask.exitCode)
 		fmt.Printf("Command finished \n")
 	}
-}
-
-func createCron(executable string) *cron {
-   crontask := cron{
-       command: executable,
-   }
-   crontask.valid = false
-   if executable != "" {
-     crontask.valid = true
-   }
-   return &crontask
 }
