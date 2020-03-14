@@ -1,9 +1,13 @@
 package main
 
+import "time"
+
 type Cron struct {
-    command string
-	exitCode int
-	output []byte
+	command   string
+	startTime time.Time
+	endTime   time.Time
+	exitCode  int
+	output    []byte
 }
 
 func (cron Cron) Validate() bool {
@@ -11,4 +15,4 @@ func (cron Cron) Validate() bool {
 		return true
 	}
 	return false
-} 
+}

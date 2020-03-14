@@ -8,6 +8,7 @@ import (
 	"log/syslog"
 	"os"
 	"os/exec"
+	"time"
 )
 
 func main() {
@@ -31,8 +32,12 @@ func main() {
 		log.Println("------ OUTPUT BEGIN")
 		logger.Warning("-----Warning...")
 
-		cmdReader, err := cmd.StdoutPipe()
-		cmdErrReader, _ := cmd.StderrPipe()
+		stdOutReader, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Printf("%s error: %s", os.Stderr, err)
+			os.Exit(1)
+		}
+		stdErrReader, err := cmd.StderrPipe()
 		if err != nil {
 			log.Printf("%s error: %s", os.Stderr, err)
 			os.Exit(1)
@@ -40,25 +45,26 @@ func main() {
 
 		var out string
 		done := make(chan struct{})
-		scanner := bufio.NewScanner(cmdReader)
-		errScanner := bufio.NewScanner(cmdErrReader)
+		scanner := bufio.NewScanner(stdOutReader)
+		errScanner := bufio.NewScanner(stdErrReader)
 		go func() {
 			for scanner.Scan() {
 				log.Printf("%s", scanner.Text())
-				out = "Error:" + scanner.Text()
+				out = scanner.Text() + "\n"
 				crontask.output = append(crontask.output, out...)
 			}
 			for errScanner.Scan() {
-				log.Printf("Err %s", errScanner.Text())
-				out = "Error:" + errScanner.Text()
+				log.Printf("Error: %s", errScanner.Text())
+				out = "Error: " + errScanner.Text() + "\n"
 				crontask.output = append(crontask.output, out...)
-				//err = errScanner.Text()
 			}
 			done <- struct{}{}
 		}()
+		crontask.startTime = time.Now()
 		cmd.Start()
 		<-done
 		cmd.Wait()
+		crontask.endTime = time.Now()
 		//	if err != nil {
 		//		if status, ok := err.(*exec.ExitError); ok {
 		//			crontask.exitCode = status.ExitCode()
@@ -67,7 +73,6 @@ func main() {
 		//		}
 		//	}
 		log.Printf("------ OUTPUT END %d", crontask.exitCode)
-		log.Println("Command finished")
 	}
 }
 func createSysLog() *syslog.Writer {
