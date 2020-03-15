@@ -24,61 +24,54 @@ func main() {
 			log.Fatalf("error opening file: %v", err)
 		}
 		defer f.Close()
-		wrt := io.MultiWriter(os.Stdout, f)
+		wrt := io.MultiWriter(os.Stdout, f, createSysLog(getConfig()))
 		log.SetOutput(wrt)
+
 		cmd := exec.Command("bash", "-c", crontask.command)
-		logger := createSysLog()
+
 		log.Printf("Command \"%s\" started!\n", crontask.command)
 		log.Println("------ OUTPUT BEGIN")
-		logger.Warning("-----Warning...")
 
 		stdOutReader, err := cmd.StdoutPipe()
 		if err != nil {
-			log.Printf("%s error: %s", os.Stderr, err)
+			log.Printf("%v error: %s", os.Stderr, err)
 			os.Exit(1)
 		}
 		stdErrReader, err := cmd.StderrPipe()
 		if err != nil {
-			log.Printf("%s error: %s", os.Stderr, err)
+			log.Printf("%v error: %s", os.Stderr, err)
 			os.Exit(1)
 		}
 
-		var out string
-		done := make(chan struct{})
+		stdChan := make(chan string)
 		scanner := bufio.NewScanner(stdOutReader)
 		errScanner := bufio.NewScanner(stdErrReader)
 		go func() {
 			for scanner.Scan() {
-				log.Printf("%s", scanner.Text())
-				out = scanner.Text() + "\n"
-				crontask.output = append(crontask.output, out...)
+				stdChan <- scanner.Text() + "\n"
 			}
 			for errScanner.Scan() {
-				log.Printf("Error: %s", errScanner.Text())
-				out = "Error: " + errScanner.Text() + "\n"
-				crontask.output = append(crontask.output, out...)
+				stdChan <- "Error: " + errScanner.Text() + "\n"
 			}
-			done <- struct{}{}
+			close(stdChan)
 		}()
+
 		crontask.startTime = time.Now()
 		cmd.Start()
-		<-done
+		for output := range stdChan {
+			log.Printf("%s", output)
+			crontask.output = append(crontask.output, output...)
+		}
 		cmd.Wait()
 		crontask.endTime = time.Now()
-		//	if err != nil {
-		//		if status, ok := err.(*exec.ExitError); ok {
-		//			crontask.exitCode = status.ExitCode()
-		//			crontask.output = status.Stderr
-		//			log.Printf("Error: %s", status.Stderr)
-		//		}
-		//	}
 		log.Printf("------ OUTPUT END %d", crontask.exitCode)
 	}
 }
-func createSysLog() *syslog.Writer {
-	w, err := syslog.Dial("udp", "localhost:514", syslog.LOG_WARNING, "testtag")
+
+func createSysLog(cfg Config) *syslog.Writer {
+	writer, err := syslog.Dial("udp", "localhost:5140", cfg.GetLogLevel(), "gcron")
 	if err != nil {
 		log.Fatal("failed to dial syslog")
 	}
-	return w
+	return writer
 }

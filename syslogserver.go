@@ -6,7 +6,7 @@ import (
 	syslog "gopkg.in/mcuadros/go-syslog.v2"
 )
 
-func main() {
+func sys() {
 	channel := make(syslog.LogPartsChannel)
 	handler := syslog.NewChannelHandler(channel)
 

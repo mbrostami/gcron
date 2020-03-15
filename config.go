@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/syslog"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
@@ -14,9 +15,21 @@ type Config struct {
 		Path  string `yaml:"path"`
 	} `yaml:"log"`
 	Server struct {
-		Port string `yaml:"port", envconfig:"SERVER_PORT"`
-		Host string `yaml:"host", envconfig:"SERVER_HOST"`
+		Port string `yaml:"port", envconfig:"GCRON_SERVER_PORT"`
+		Host string `yaml:"host", envconfig:"GCRON_SERVER_HOST"`
 	} `yaml:"server"`
+}
+
+func (cfg *Config) GetLogLevel() syslog.Priority {
+	if cfg.Log.Level == "debug" {
+		return syslog.LOG_DEBUG
+	} else if cfg.Log.Level == "info" {
+		return syslog.LOG_INFO
+	} else if cfg.Log.Level == "warning" {
+		return syslog.LOG_WARNING
+	} else {
+		return syslog.LOG_ERR
+	}
 }
 
 func getConfig() Config {
