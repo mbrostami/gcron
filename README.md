@@ -14,8 +14,8 @@ A go written tool to manage distributed cron jobs with centralized GUI. This wil
 
 ## Dev
 Edit config.yml file and update log.path  
-`go run *.go --exec="git status"`  
-`go run main.go cron.go config.go --exec="echo 222 && sleep1 && echo 333"`  
+TCP Server `cd tcpserver && go run server.go cron.go`  
+Agent `cd agent && go run main.go config.go cron.go --exec="echo 111 && sleep 1 && echo 222"`  
 
 ## TODO
 - All Features! :D

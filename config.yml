@@ -1,8 +1,0 @@
-
-server:
-    host: "localhost"
-    port: "5140"
-
-log:
-    level: "error"
-    path: "/Users/mohamed/www/docker/ghelper/gcron.log"

@@ -1,0 +1,15 @@
+
+server:
+    tcp: 
+        host: "localhost"
+        port: "3333"
+    # udp:
+        # host: "localhost"
+        # port: "5140"
+    # unix: 
+        # path: "/run/gcron.sock"
+
+
+log:
+    level: "info"
+    path: "/Users/mohamed/www/docker/gcron/gcron.log"
