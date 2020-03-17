@@ -51,7 +51,7 @@ func handleRequest(conn net.Conn) {
 	tmpstruct := new(Cron)
 	gobobj := gob.NewDecoder(tmpbuff)
 	gobobj.Decode(tmpstruct)
-	fmt.Printf("Income: %+v", tmpstruct)
+	fmt.Printf("%+v", string(tmpstruct.Output))
 	// Send a response back to person contacting us.
 	// conn.Write([]byte("Message received."))
 	// Close the connection when you're done with it.
