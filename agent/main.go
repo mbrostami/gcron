@@ -2,8 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/gob"
 	"flag"
 	"io"
 	"log"
@@ -70,21 +68,19 @@ func main() {
 		crontask.Success = false
 
 		conn := tcpConnection(cfg)
+		defer conn.Close()
 		cmd.Start()
 		crontask.Pid = cmd.Process.Pid
+		startLine := "[StartTime:" + crontask.StartTime.String() + "]\n"
+		conn.Write([]byte(startLine))
 		for output := range stdChan {
 			log.Printf("%s", output)
 			crontask.Output = append(crontask.Output, output...)
 			// FIXME: This only sends first line!
-			go func() {
-				binaryBuff := new(bytes.Buffer)
-				gobobj := gob.NewEncoder(binaryBuff)
-				gobobj.Encode(crontask)
-				conn.Write(binaryBuff.Bytes())
-			}()
+			go conn.Write(crontask.Output)
 		}
 		cmd.Wait()
-		defer conn.Close()
+
 		p, _ := process.NewProcess(int32(cmd.Process.Pid))
 		crontask.Username, _ = p.Username()
 		crontask.Success = cmd.ProcessState.Success()
@@ -92,7 +88,8 @@ func main() {
 		crontask.UserTime = cmd.ProcessState.UserTime()
 		crontask.ExitCode = cmd.ProcessState.ExitCode()
 		crontask.EndTime = time.Now()
-
+		endLine := "[EndTime:" + crontask.EndTime.String() + "]"
+		conn.Write([]byte(endLine))
 		// log.Printf("------ OUTPUT END %+v", crontask)
 	}
 }
