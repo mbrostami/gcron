@@ -74,9 +74,11 @@ func main() {
 		for output := range stdChan {
 			log.Printf("%s", output)
 			crontask.Output = append(crontask.Output, output...)
-			// FIXME: This only sends first line!
 		}
 		cmd.Wait()
+
+		// Send crontask over tcp -- later over udp and unix socket
+		// FIXME: Stream output instead of sending all at once
 		conn := tcpConnection(cfg)
 		defer conn.Close()
 
@@ -98,7 +100,7 @@ func main() {
 func tcpConnection(cfg Config) *net.TCPConn {
 	if cfg.Server.TCP.Host != "" {
 		servAddr := cfg.Server.TCP.Host + ":" + cfg.Server.TCP.Port
-		log.Printf("%s", servAddr)
+		//log.Printf("%s", servAddr)
 		tcpAddr, err := net.ResolveTCPAddr("tcp", servAddr)
 		if err != nil {
 			println("ResolveTCPAddr failed:", err.Error())
