@@ -9,22 +9,21 @@ import (
 )
 
 const (
-	CONN_HOST = "localhost"
-	CONN_PORT = "3333"
-	CONN_TYPE = "tcp"
+	CONN_PATH = "/tmp/gcron.sock"
+	CONN_TYPE = "unix"
 )
 
-// Listen Start listening on tcp port
+// Listen Start listening on udp port
 func main() {
 	// Listen for incoming connections.
-	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	l, err := net.Listen(CONN_TYPE, CONN_PATH)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
-	fmt.Println("Listening on " + CONN_HOST + ":" + CONN_PORT)
+	fmt.Println("Listening on " + CONN_PATH)
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
@@ -52,6 +51,7 @@ func handleRequest(conn net.Conn) {
 	gobobj := gob.NewDecoder(tmpbuff)
 	gobobj.Decode(tmpstruct)
 	fmt.Printf("%+v", string(tmpstruct.Output))
+	fmt.Printf("%+v", tmpstruct)
 	// Send a response back to person contacting us.
 	// conn.Write([]byte("Message received."))
 	// Close the connection when you're done with it.

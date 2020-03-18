@@ -77,11 +77,6 @@ func main() {
 		}
 		cmd.Wait()
 
-		// Send crontask over tcp -- later over udp and unix socket
-		// FIXME: Stream output instead of sending all at once
-		conn := tcpConnection(cfg)
-		defer conn.Close()
-
 		p, _ := process.NewProcess(int32(cmd.Process.Pid))
 		crontask.Username, _ = p.Username()
 		crontask.Success = cmd.ProcessState.Success()
@@ -90,17 +85,38 @@ func main() {
 		crontask.ExitCode = cmd.ProcessState.ExitCode()
 		crontask.EndTime = time.Now()
 
+		// Send crontask over tcp udp and unix socket
+		// FIXME: Stream output instead of sending all at once
 		binaryBuff := new(bytes.Buffer)
 		gobobj := gob.NewEncoder(binaryBuff)
 		gobobj.Encode(crontask)
-		conn.Write(binaryBuff.Bytes())
+		tcpConn := tcpConnection(cfg)
+		if tcpConn != nil {
+			go func(bytes []byte) {
+				tcpConn.Write(bytes)
+				tcpConn.Close()
+			}(binaryBuff.Bytes())
+		}
+		udpConn := udpConnection(cfg)
+		if udpConn != nil {
+			go func(bytes []byte) {
+				udpConn.Write(bytes)
+				udpConn.Close()
+			}(binaryBuff.Bytes())
+		}
+		unixConn := unixConnection(cfg)
+		if unixConn != nil {
+			go func(bytes []byte) {
+				unixConn.Write(bytes)
+				unixConn.Close()
+			}(binaryBuff.Bytes())
+		}
 	}
 }
 
 func tcpConnection(cfg Config) *net.TCPConn {
 	if cfg.Server.TCP.Host != "" {
 		servAddr := cfg.Server.TCP.Host + ":" + cfg.Server.TCP.Port
-		//log.Printf("%s", servAddr)
 		tcpAddr, err := net.ResolveTCPAddr("tcp", servAddr)
 		if err != nil {
 			println("ResolveTCPAddr failed:", err.Error())
@@ -116,38 +132,37 @@ func tcpConnection(cfg Config) *net.TCPConn {
 	return nil
 }
 
-// func udpConnection(cfg Config) *net.UDPConn {
-// 	// if cfg.Server.UDP.Host != nil {
-// 	servAddr := cfg.Server.UDP.Host + ":" + string(cfg.Server.UDP.Port)
-// 	udpAddr, err := net.ResolveUDPAddr("udp", servAddr)
-// 	if err != nil {
-// 		println("ResolveUDPAddr failed:", err.Error())
-// 		os.Exit(1)
-// 	}
-// 	conn, err := net.DialUDP("udp", nil, udpAddr)
-// 	if err != nil {
-// 		println("Dial UDP failed:", err.Error())
-// 		os.Exit(1)
-// 	}
-// 	return conn
-// 	// }
-// 	// return nil
-// }
+func udpConnection(cfg Config) *net.UDPConn {
+	if cfg.Server.UDP.Host != "" {
+		servAddr := cfg.Server.UDP.Host + ":" + string(cfg.Server.UDP.Port)
+		udpAddr, err := net.ResolveUDPAddr("udp", servAddr)
+		if err != nil {
+			println("ResolveUDPAddr failed:", err.Error())
+			os.Exit(1)
+		}
+		conn, err := net.DialUDP("udp", nil, udpAddr)
+		if err != nil {
+			println("Dial UDP failed:", err.Error())
+			os.Exit(1)
+		}
+		return conn
+	}
+	return nil
+}
 
-// func unixConnection(cfg Config) *net.UnixConn {
-// 	// if cfg.Server.Unix.Host != nil {
-// 	servAddr := cfg.Server.Unix.Host + ":" + string(cfg.Server.Unix.Port)
-// 	unixAddr, err := net.ResolveUnixAddr("unix", servAddr)
-// 	if err != nil {
-// 		println("ResolveUDPAddr failed:", err.Error())
-// 		os.Exit(1)
-// 	}
-// 	conn, err := net.DialUnix("udp", nil, unixAddr)
-// 	if err != nil {
-// 		println("Dial UDP failed:", err.Error())
-// 		os.Exit(1)
-// 	}
-// 	return conn
-// 	// }
-// 	// return nil
-// }
+func unixConnection(cfg Config) *net.UnixConn {
+	if cfg.Server.Unix.Path != "" {
+		unixAddr, err := net.ResolveUnixAddr("unix", cfg.Server.Unix.Path)
+		if err != nil {
+			println("ResolveUNIXAddr failed:", err.Error())
+			os.Exit(1)
+		}
+		conn, err := net.DialUnix("unix", nil, unixAddr)
+		if err != nil {
+			println("Dial UNIX failed:", err.Error())
+			os.Exit(1)
+		}
+		return conn
+	}
+	return nil
+}

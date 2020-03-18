@@ -1,13 +1,13 @@
 
 server:
-    tcp: 
-        host: "localhost"
-        port: "3333"
+    # tcp: 
+    #     host: "localhost"
+    #     port: "3333"
     # udp:
         # host: "localhost"
-        # port: "5140"
-    # unix: 
-        # path: "/run/gcron.sock"
+        # port: "3334"
+    unix: 
+        path: "/tmp/gcron.sock"
 
 
 log:
