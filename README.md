@@ -3,6 +3,7 @@ A go written tool to manage cron jobs. This will help you monitor outputs, statu
 Generating report based on logs  
 Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc.)  
 
+[gcron-server](https://github.com/mbrostami/gcron-server)
 ## TODO
 - Support different log formats for write/stream purpose 
 - Run cron every given seconds for n times (e.g. every 10 seconds, in total 6 times)
