@@ -1,9 +1,9 @@
-package main
+package cron
 
 import "time"
 
-// Cron keeps cronjob information
-type Cron struct {
+// Task keeps cronjob information
+type Task struct {
 	Pid        int
 	Username   string
 	Command    string
@@ -16,9 +16,9 @@ type Cron struct {
 	Success    bool
 }
 
-// Validate validates the command
-func (cron Cron) Validate() bool {
-	if cron.Command != "" {
+// Validate the command
+func (task Task) Validate() bool {
+	if task.Command != "" {
 		return true
 	}
 	return false
