@@ -12,17 +12,25 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/rs/xid"
 	"github.com/shirou/gopsutil/process"
 )
 
 func main() {
 	executable := flag.String("exec", "", "Command to execute")
 	configpath := flag.String("config", ".", "Config file path")
+	flagOutNoTime := flag.Bool("o-notime", false, "Clean output")
+	flagOutClean := flag.Bool("o-clean", false, "Clean output")
 	flag.Parse()
 	crontask := cron.Task{
 		Command: *executable,
 	}
 	if crontask.Validate() {
+		if *flagOutNoTime == false {
+			log.SetFlags(log.Ldate | log.Ltime)
+		} else {
+			log.SetFlags(0)
+		}
 		cfg := configs.GetConfig(*configpath)
 		f, err := os.OpenFile(cfg.Log.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -38,9 +46,6 @@ func main() {
 
 		cmd := exec.Command("bash", "-c", crontask.Command)
 
-		log.Printf("Command \"%s\" started!\n", crontask.Command)
-		log.Println("------ OUTPUT BEGIN")
-
 		stdOutReader, err := cmd.StdoutPipe()
 		if err != nil {
 			log.Printf("%v error: %s", os.Stderr, err)
@@ -55,8 +60,9 @@ func main() {
 		stdChan := make(chan string)
 		scanner := bufio.NewScanner(stdOutReader)
 		errScanner := bufio.NewScanner(stdErrReader)
+		guid := xid.New() // sortable guid
+		crontask.GUID = guid.String() + " "
 		go func() {
-			stdChan <- "[uid][tags]" + "\n"
 			for scanner.Scan() {
 				stdChan <- scanner.Text() + "\n"
 			}
@@ -68,7 +74,6 @@ func main() {
 
 		crontask.StartTime = time.Now()
 		crontask.Success = false
-
 		cmd.Start()
 		crontask.Pid = cmd.Process.Pid
 		for output := range stdChan {
@@ -85,6 +90,14 @@ func main() {
 		crontask.ExitCode = cmd.ProcessState.ExitCode()
 		crontask.EndTime = time.Now()
 
+		// Log tags
+		if *flagOutClean == false {
+			log.Printf("[guid] %s", crontask.GUID)
+			log.Printf("[duration] %v s", crontask.EndTime.Sub(crontask.StartTime).Seconds())
+			log.Printf("[systime] %d ms", crontask.SystemTime.Seconds)
+			log.Printf("[usertime] %d ms", crontask.UserTime.Seconds)
+			log.Printf("[status] %v", crontask.Success)
+		}
 		// Send crontask over tcp udp and unix socket
 		// FIXME: Stream output instead of sending all at once
 		output.SendOverTCP(

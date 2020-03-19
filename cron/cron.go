@@ -5,6 +5,7 @@ import "time"
 // Task keeps cronjob information
 type Task struct {
 	Pid        int
+	GUID       string
 	Username   string
 	Command    string
 	StartTime  time.Time
