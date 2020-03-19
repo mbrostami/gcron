@@ -7,7 +7,7 @@ server:
         # host: "localhost"
         # port: "3334"
     unix: 
-        path: "/tmp/gcron.sock"
+        path: "/tmp/gcron-server.sock"
 
 
 log:

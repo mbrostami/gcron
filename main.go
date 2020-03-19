@@ -57,16 +57,16 @@ func main() {
 			os.Exit(1)
 		}
 
-		stdChan := make(chan string)
+		stdChan := make(chan []byte)
 		scanner := bufio.NewScanner(stdOutReader)
 		errScanner := bufio.NewScanner(stdErrReader)
 		crontask.GUID = xid.New().String() // sortable guid
 		go func() {
 			for scanner.Scan() {
-				stdChan <- scanner.Text() + "\n"
+				stdChan <- scanner.Bytes()
 			}
 			for errScanner.Scan() {
-				stdChan <- errScanner.Text() + "\n"
+				stdChan <- errScanner.Bytes()
 			}
 			close(stdChan)
 		}()
@@ -76,7 +76,7 @@ func main() {
 		cmd.Start()
 		crontask.Pid = cmd.Process.Pid
 		for output := range stdChan {
-			log.Printf("%s", output)
+			log.Printf("%s", string(output))
 			crontask.Output = append(crontask.Output, output...)
 		}
 		cmd.Wait()
