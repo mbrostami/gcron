@@ -19,5 +19,15 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 
 ## Dev
 Edit config.yml file and update log.path   
-`go run main.go --exec="echo 111 && sleep 1 && echo 222"`  
-`go run main.go --exec="git status"`  
+`go run main.go -exec="echo 111 && sleep 1 && echo 222"`  
+`go run main.go -exec="git status"`  
+```
+  -exec string
+        Command to execute
+  -config string
+        Config file path (default ".")
+  -o-clean
+        Clean output
+  -o-notime
+        Do not show datetime
+```
