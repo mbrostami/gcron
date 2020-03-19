@@ -60,8 +60,7 @@ func main() {
 		stdChan := make(chan string)
 		scanner := bufio.NewScanner(stdOutReader)
 		errScanner := bufio.NewScanner(stdErrReader)
-		guid := xid.New() // sortable guid
-		crontask.GUID = guid.String() + " "
+		crontask.GUID = xid.New().String() // sortable guid
 		go func() {
 			for scanner.Scan() {
 				stdChan <- scanner.Text() + "\n"
@@ -92,11 +91,14 @@ func main() {
 
 		// Log tags
 		if *flagOutClean == false {
-			log.Printf("[guid] %s", crontask.GUID)
-			log.Printf("[duration] %v s", crontask.EndTime.Sub(crontask.StartTime).Seconds())
-			log.Printf("[systime] %d ms", crontask.SystemTime.Seconds)
-			log.Printf("[usertime] %d ms", crontask.UserTime.Seconds)
-			log.Printf("[status] %v", crontask.Success)
+			log.Printf(
+				"[guid:%s] [duration:%vs] [systime:%vs] [usertime:%vs] [status:%v]",
+				crontask.GUID,
+				crontask.EndTime.Sub(crontask.StartTime).Seconds(),
+				crontask.SystemTime.Seconds(),
+				crontask.UserTime.Seconds(),
+				crontask.Success,
+			)
 		}
 		// Send crontask over tcp udp and unix socket
 		// FIXME: Stream output instead of sending all at once
