@@ -19,7 +19,6 @@ import (
 
 func main() {
 	executable := flag.String("exec", "echo", "Command to execute")
-	configpath := flag.String("config", ".", "Config file path")
 
 	// Override config file values
 	flag.Bool("out.notime", false, "Clean output")
@@ -30,7 +29,7 @@ func main() {
 	flag.String("server.udp.host", "", "UDP Server host")
 	flag.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
 
-	cfg := configs.GetConfig(*configpath, flag.CommandLine)
+	cfg := configs.GetConfig(flag.CommandLine)
 	crontask := cron.Task{
 		Command: *executable,
 	}

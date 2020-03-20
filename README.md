@@ -6,6 +6,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 [gcron-server](https://github.com/mbrostami/gcron-server)
 ## TODO
 - Support different log formats for write/stream purpose 
+- Mutex lock
 - Run cron every given seconds for n times (e.g. every 10 seconds, in total 6 times)
 - Configurable tags (mem usage, cpu usage, systime, usertime, ...) (flag/config)
 - Support single line log (convert newlines to specific character) (flag/config)

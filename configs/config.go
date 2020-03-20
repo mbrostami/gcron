@@ -60,9 +60,9 @@ func (cfg *Config) GetLogLevel() syslog.Priority {
 }
 
 // GetConfig returns the configuration map
-func GetConfig(cfgPath string, flagset *flag.FlagSet) Config {
+func GetConfig(flagset *flag.FlagSet) Config {
 	var cfg Config
-	lviper := readFile(cfgPath, flagset)
+	lviper := readFile(flagset)
 	lviper.Unmarshal(&cfg)
 	// fmt.Printf("%+v", cfg)
 	return cfg
@@ -73,13 +73,10 @@ func processError(err error) {
 	os.Exit(2)
 }
 
-func readFile(cfgPath string, flagset *flag.FlagSet) *viper.Viper {
-	// f, err := os.Open(cfgPath)
+func readFile(flagset *flag.FlagSet) *viper.Viper {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("/etc/gcron/")
-	viper.AddConfigPath(cfgPath)
-	// pflag.String("server.tcp.port", "1400", "TCP server port")
-	// pflag.String("server.tcp.host", "localhost", "TCP server host")
+	viper.AddConfigPath(".")
 	pflag.CommandLine.AddGoFlagSet(flagset)
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)
