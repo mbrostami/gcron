@@ -10,7 +10,6 @@ import (
 
 // SendOverUNIX send data over unix socket
 func SendOverUNIX(path string, task cron.Task) bool {
-	return true // FIXME temprory
 	binaryBuff := new(bytes.Buffer)
 	gobobj := gob.NewEncoder(binaryBuff)
 	gobobj.Encode(task)

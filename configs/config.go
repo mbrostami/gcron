@@ -1,10 +1,12 @@
 package configs
 
 import (
+	"flag"
 	"fmt"
 	"log/syslog"
 	"os"
 
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -14,17 +16,24 @@ type Config struct {
 		Level string
 		Path  string
 	}
+	Out struct {
+		Clean  bool
+		Notime bool
+	}
 	Server struct {
 		TCP struct {
-			Host string
-			Port string
+			Enabled bool
+			Host    string
+			Port    string
 		}
 		UDP struct {
-			Host string
-			Port string
+			Enabled bool
+			Host    string
+			Port    string
 		}
 		Unix struct {
-			Path string
+			Enabled bool
+			Path    string
 		}
 	}
 }
@@ -51,9 +60,9 @@ func (cfg *Config) GetLogLevel() syslog.Priority {
 }
 
 // GetConfig returns the configuration map
-func GetConfig(cfgPath string) Config {
+func GetConfig(cfgPath string, flagset *flag.FlagSet) Config {
 	var cfg Config
-	lviper := readFile(cfgPath)
+	lviper := readFile(cfgPath, flagset)
 	lviper.Unmarshal(&cfg)
 	// fmt.Printf("%+v", cfg)
 	return cfg
@@ -64,11 +73,16 @@ func processError(err error) {
 	os.Exit(2)
 }
 
-func readFile(cfgPath string) *viper.Viper {
+func readFile(cfgPath string, flagset *flag.FlagSet) *viper.Viper {
 	// f, err := os.Open(cfgPath)
 	viper.SetConfigName("config")
 	viper.AddConfigPath("/etc/gcron/")
 	viper.AddConfigPath(cfgPath)
+	// pflag.String("server.tcp.port", "1400", "TCP server port")
+	// pflag.String("server.tcp.host", "localhost", "TCP server host")
+	pflag.CommandLine.AddGoFlagSet(flagset)
+	pflag.Parse()
+	viper.BindPFlags(pflag.CommandLine)
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
 		processError(err)

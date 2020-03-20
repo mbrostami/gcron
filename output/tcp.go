@@ -10,7 +10,6 @@ import (
 
 // SendOverTCP send data over tcp
 func SendOverTCP(host string, port string, task cron.Task) bool {
-	return true // FIXME temprory
 	binaryBuff := new(bytes.Buffer)
 	gobobj := gob.NewEncoder(binaryBuff)
 	gobobj.Encode(task)

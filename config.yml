@@ -1,15 +1,18 @@
 
 server:
-    # tcp: 
-    #     host: "localhost"
-    #     port: "3333"
-    # udp:
-        # host: "localhost"
-        # port: "3334"
+    tcp: 
+        enabled: false
+        host: "localhost"
+        port: "1400"
+    udp:
+        enabled: false
+        host: "localhost"
+        port: "1401"
     unix: 
+        enabled: true
         path: "/tmp/gcron-server.sock"
 
 
 log:
     level: "info"
-    path: "/Users/mohamed/www/docker/gcron/gcron.log"
+    path: "./gcron.log"
