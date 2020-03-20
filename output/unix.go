@@ -3,9 +3,10 @@ package output
 import (
 	"bytes"
 	"encoding/gob"
-	"gcron/cron"
 	"net"
 	"os"
+
+	"github.com/mbrostami/gcron/cron"
 )
 
 // SendOverUNIX send data over unix socket

@@ -3,9 +3,10 @@ package output
 import (
 	"bytes"
 	"encoding/gob"
-	"gcron/cron"
 	"net"
 	"os"
+
+	"github.com/mbrostami/gcron/cron"
 )
 
 // SendOverTCP send data over tcp

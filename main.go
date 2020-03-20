@@ -3,14 +3,15 @@ package main
 import (
 	"bufio"
 	"flag"
-	"gcron/configs"
-	"gcron/cron"
-	"gcron/output"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/mbrostami/gcron/configs"
+	"github.com/mbrostami/gcron/cron"
+	"github.com/mbrostami/gcron/output"
 
 	"github.com/rs/xid"
 	"github.com/shirou/gopsutil/process"
