@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"hash/fnv"
 	"io"
 	"log"
 	"os"
@@ -19,10 +20,11 @@ import (
 
 func main() {
 	executable := flag.String("exec", "echo", "Command to execute")
+	// flagLock := flag.Bool("lock", false, "Mutex lock")
 
 	// Override config file values
-	flag.Bool("out.notime", false, "Clean output")
-	flag.Bool("out.clean", false, "Clean output")
+	flag.Bool("out.tags", false, "Output tags")
+	flag.Bool("out.clean", false, "Only command output")
 	flag.String("server.tcp.port", "", "TCP Server port")
 	flag.String("server.tcp.host", "", "TCP Server host")
 	flag.String("server.udp.port", "", "UDP Server port")
@@ -34,10 +36,14 @@ func main() {
 		Command: *executable,
 	}
 	if crontask.Validate() {
-		if cfg.Out.Notime == false {
+
+		hostname, _ := os.Hostname()
+		crontask.Hostname = hostname
+
+		// Setup log
+		log.SetFlags(0)
+		if cfg.Out.Clean == false {
 			log.SetFlags(log.Ldate | log.Ltime)
-		} else {
-			log.SetFlags(0)
 		}
 		f, err := os.OpenFile(cfg.Log.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -88,8 +94,11 @@ func main() {
 		}
 		cmd.Wait()
 
-		p, _ := process.NewProcess(int32(cmd.Process.Pid))
-		crontask.Username, _ = p.Username()
+		proc, _ := process.NewProcess(int32(cmd.Process.Pid))
+		parent, _ := process.NewProcess(int32(os.Getppid()))
+		crontask.Parent, _ = parent.Name()
+		crontask.UID = hash(crontask.Command)
+		crontask.Username, _ = proc.Username()
 		crontask.Success = cmd.ProcessState.Success()
 		crontask.SystemTime = cmd.ProcessState.SystemTime()
 		crontask.UserTime = cmd.ProcessState.UserTime()
@@ -97,10 +106,10 @@ func main() {
 		crontask.EndTime = time.Now()
 
 		// Log tags
-		if cfg.Out.Clean == false {
+		if cfg.Out.Tags == true {
 			log.Printf(
-				"[guid:%s] [duration:%vs] [systime:%vs] [usertime:%vs] [status:%v]",
-				crontask.GUID,
+				"[uid:%d] [duration:%vs] [systime:%vs] [usertime:%vs] [status:%v]",
+				crontask.UID,
 				crontask.EndTime.Sub(crontask.StartTime).Seconds(),
 				crontask.SystemTime.Seconds(),
 				crontask.UserTime.Seconds(),
@@ -130,4 +139,10 @@ func main() {
 			)
 		}
 	}
+}
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
 }

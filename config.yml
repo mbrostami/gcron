@@ -9,9 +9,12 @@ server:
         host: "localhost"
         port: "1401"
     unix: 
-        enabled: true
+        enabled: false
         path: "/tmp/gcron-server.sock"
 
+out:
+    tags: false
+    clean: false
 
 log:
     level: "info"

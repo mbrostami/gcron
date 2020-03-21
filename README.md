@@ -23,12 +23,12 @@ Edit config.yml file and update log.path
 `go run main.go -exec="echo 111 && sleep 1 && echo 222"`  
 `go run main.go -exec="git status"`  
 ```
-  -exec string
-        Command to execute
-  -config string
-        Config file path (default ".")
-  -o-clean
-        Clean output
-  -o-notime
-        Do not show datetime
+      --exec string               Command to execute (default "echo")
+      --out.clean                 Only command output
+      --out.tags                  Output tags
+      --server.tcp.host string    TCP Server host
+      --server.tcp.port string    TCP Server port
+      --server.udp.host string    UDP Server host
+      --server.udp.port string    UDP Server port
+      --server.unix.path string   UNIX socket path (default "/tmp/gcron-server.sock")
 ```

@@ -17,8 +17,8 @@ type Config struct {
 		Path  string
 	}
 	Out struct {
-		Clean  bool
-		Notime bool
+		Clean bool
+		Tags  bool
 	}
 	Server struct {
 		TCP struct {
