@@ -23,29 +23,57 @@ import (
 )
 
 func main() {
-	executable := flag.String("exec", "echo", "Command to execute")
-	// flagRunAfter := flag.Int("run.after", 0, "Run command after given seconds")
-	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
-	flagLockName := flag.String("lock.name", "", "Mutex name")
-	flagOverride := flag.String("override", "", "Override command status by regex match in output")
+	execFlagSet := flag.NewFlagSet("exec", flag.ExitOnError)
+	reportsFlagSet := flag.NewFlagSet("report", flag.ExitOnError)
 
-	// Override config file values
-	flag.Bool("out.tags", false, "Output tags")
-	flag.Bool("out.hide.systime", false, "Hide system time tag")
-	flag.Bool("out.hide.usertime", false, "Hide user time tag")
-	flag.Bool("out.hide.duration", false, "Hide duration tag")
-	flag.Bool("out.hide.uid", false, "Hide uid tag")
-	flag.Bool("out.clean", false, "Only command output")
-	flag.String("server.tcp.port", "", "TCP Server port")
-	flag.String("server.tcp.host", "", "TCP Server host")
-	flag.String("server.udp.port", "", "UDP Server port")
-	flag.String("server.udp.host", "", "UDP Server host")
-	flag.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
+	executable := execFlagSet.String("c", "", "Command to execute")
+	flagLockEnabled := execFlagSet.Bool("lock.enable", false, "Enable mutex lock")
+	flagLockName := execFlagSet.String("lock.name", "", "Mutex name")
+	flagOverride := execFlagSet.String("override", "", "Override command status by regex match in output")
+	execFlagSet.Bool("out.tags", false, "Output tags")
+	execFlagSet.Bool("out.hide.systime", false, "Hide system time tag")
+	execFlagSet.Bool("out.hide.usertime", false, "Hide user time tag")
+	execFlagSet.Bool("out.hide.duration", false, "Hide duration tag")
+	execFlagSet.Bool("out.hide.uid", false, "Hide uid tag")
+	execFlagSet.Bool("out.clean", false, "Only command output")
+	execFlagSet.String("server.tcp.port", "", "TCP Server port")
+	execFlagSet.String("server.tcp.host", "", "TCP Server host")
+	execFlagSet.String("server.udp.port", "", "UDP Server port")
+	execFlagSet.String("server.udp.host", "", "UDP Server host")
+	execFlagSet.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
 
-	cfg := configs.GetConfig(flag.CommandLine)
-	crontask := cron.Task{
-		Command: *executable,
+	reportsFlagSet.String("format", "text", "Test")
+	if len(os.Args) == 2 {
+		fmt.Println("usage: gcron <command> [<args>]")
+		fmt.Println("  exec     Execute command")
+		fmt.Println("  report   Generate reports")
+		fmt.Println("help: gcron <command> --help")
+
+		return
 	}
+
+	switch os.Args[1] {
+	case "exec":
+		cfg := configs.GetConfig(execFlagSet)
+		crontask := cron.Task{
+			Command:   *executable,
+			FLock:     *flagLockEnabled,
+			FLockName: *flagLockName,
+			FOverride: *flagOverride,
+		}
+		processCommand(cfg, crontask)
+
+	case "report":
+		cfg := configs.GetConfig(reportsFlagSet)
+		report(cfg)
+	default:
+		fmt.Printf("%q is not valid command.\n", os.Args[1])
+		os.Exit(2)
+	}
+}
+
+func processCommand(cfg configs.Config, crontask cron.Task) {
+
 	if crontask.Validate() {
 
 		hostname, _ := os.Hostname()
@@ -53,10 +81,10 @@ func main() {
 		crontask.UID = hash(crontask.Command)
 
 		var mtx *helpers.Mutex
-		if *flagLockEnabled {
+		if crontask.FLock {
 			mutexName := strconv.FormatUint(uint64(crontask.UID), 10)
-			if *flagLockName != "" {
-				mutexName = *flagLockName
+			if crontask.FLockName != "" {
+				mutexName = crontask.FLockName
 			}
 			mtx, err := helpers.NewMutex(mutexName)
 			if err != nil {
@@ -121,8 +149,8 @@ func main() {
 		for output := range stdChan {
 			log.Printf("%s", string(output))
 			crontask.Output = append(crontask.Output, output...)
-			if *flagOverride != "" {
-				statusByRegex = statusByRegex || validators.NewRegex(*flagOverride).Validate(string(output))
+			if crontask.FOverride != "" {
+				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
 		}
 		<-done
@@ -131,7 +159,7 @@ func main() {
 		}
 		cmd.Wait()
 		crontask.Success = cmd.ProcessState.Success()
-		if *flagOverride != "" {
+		if crontask.FOverride != "" {
 			crontask.Success = statusByRegex
 		}
 
@@ -194,4 +222,8 @@ func hash(s string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(s))
 	return h.Sum32()
+}
+
+func report(cfg configs.Config) {
+	return
 }

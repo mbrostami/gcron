@@ -13,9 +13,11 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - ~~Optional Regex status (Accept regex to change status of the cron to false or true)~~
   - ~~By default exitCode of the cron command will be used to detect if command was successful or failed~~
 - Report table - stdout (read given logs and display how many crons are logged, how many times they run and show time consuming crons ...)
-- Dry run
 - Command line search by tags
 - Alert based on status 
+
+## FIXME
+- Delete lock file
 
 ## Dev
 Edit config.yml file and update log.path   
@@ -23,8 +25,8 @@ Edit config.yml file and update log.path
 `go run main.go -exec="git status"`  
 ```
       --exec string               Command to execute (default "echo")
-      --lock.enable               Enable mutex lock
-      --lock.name string          Mutex name
+      --lock.enable               Enable mutex lock (prevent running same process twice)
+      --lock.name string          Mutex name (if it's not provided, uid will be used)
       --out.clean                 Only command output
       --out.hide.duration         Hide duration tag (default false)
       --out.hide.systime          Hide system time tag (default false)
