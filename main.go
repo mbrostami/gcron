@@ -15,6 +15,7 @@ import (
 	"github.com/mbrostami/gcron/cron"
 	"github.com/mbrostami/gcron/helpers"
 	"github.com/mbrostami/gcron/output"
+	"github.com/mbrostami/gcron/validators"
 
 	"github.com/rs/xid"
 	"github.com/shirou/gopsutil/process"
@@ -25,6 +26,7 @@ func main() {
 	// flagRunAfter := flag.Int("run.after", 0, "Run command after given seconds")
 	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
 	flagLockName := flag.String("lock.name", "", "Mutex name")
+	flagOverride := flag.String("override", "", "Override command status by regex match in output")
 
 	// Override config file values
 	flag.Bool("out.tags", false, "Output tags")
@@ -89,11 +91,11 @@ func main() {
 			log.Fatalf("%v error: %s", os.Stderr, err)
 		}
 
+		crontask.GUID = xid.New().String() // sortable guid
 		stdChan := make(chan []byte)
 		done := make(chan bool)
 		scanner := bufio.NewScanner(stdOutReader)
 		errScanner := bufio.NewScanner(stdErrReader)
-		crontask.GUID = xid.New().String() // sortable guid
 		// Stream output
 		go func() {
 			for scanner.Scan() {
@@ -110,21 +112,28 @@ func main() {
 		crontask.Success = false
 		cmd.Start()
 		crontask.Pid = cmd.Process.Pid
+		var statusByRegex = false
 		for output := range stdChan {
 			log.Printf("%s", string(output))
 			crontask.Output = append(crontask.Output, output...)
+			if *flagOverride != "" {
+				statusByRegex = statusByRegex || validators.NewRegex(*flagOverride).Validate(string(output))
+			}
 		}
 		<-done
 		if mtx != nil {
 			mtx.Release()
 		}
 		cmd.Wait()
+		crontask.Success = cmd.ProcessState.Success()
+		if *flagOverride != "" {
+			crontask.Success = statusByRegex
+		}
 
 		proc, _ := process.NewProcess(int32(cmd.Process.Pid))
 		parent, _ := process.NewProcess(int32(os.Getppid()))
 		crontask.Parent, _ = parent.Name()
 		crontask.Username, _ = proc.Username()
-		crontask.Success = cmd.ProcessState.Success()
 		crontask.SystemTime = cmd.ProcessState.SystemTime()
 		crontask.UserTime = cmd.ProcessState.UserTime()
 		crontask.ExitCode = cmd.ProcessState.ExitCode()

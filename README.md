@@ -6,11 +6,10 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 [gcron-server](https://github.com/mbrostami/gcron-server)
 ## TODO
 - Support different log formats for write/stream purpose 
-- Mutex lock
+- ~~Mutex lock~~
 - Run cron every given seconds for n times (e.g. every 10 seconds, in total 6 times)
 - Configurable tags (mem usage, cpu usage, systime, usertime, ...) (flag/config)
-- Support single line log (convert newlines to specific character) (flag/config)
-- Trackable id for logs
+- ~~Trackable id for logs~~
 - Optional Regex status (Accept regex to change status of the cron to false or true)
   - By default exitCode of the cron command will be used to detect if command was successful or failed
 - Report table - stdout (read given logs and display how many crons are logged, how many times they run and show time consuming crons ...)
@@ -28,6 +27,7 @@ Edit config.yml file and update log.path
       --lock.name string          Mutex name
       --out.clean                 Only command output
       --out.tags                  Output tags
+      --override string           Override command status by regex match in output
       --server.tcp.host string    TCP Server host
       --server.tcp.port string    TCP Server port
       --server.udp.host string    UDP Server host
