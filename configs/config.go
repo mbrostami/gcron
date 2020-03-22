@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config keep all config file values
+// Config map configs
 type Config struct {
 	Log struct {
 		Level string
@@ -19,6 +19,12 @@ type Config struct {
 	Out struct {
 		Clean bool
 		Tags  bool
+		Hide  struct {
+			SysTime  bool
+			UserTime bool
+			Duration bool
+			UID      bool
+		}
 	}
 	Server struct {
 		TCP struct {

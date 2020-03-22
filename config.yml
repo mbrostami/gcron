@@ -13,6 +13,11 @@ server:
         path: "/tmp/gcron-server.sock"
 
 out:
+    hide: 
+        systime: false
+        usertime: false
+        duration: false
+        uid: false
     tags: false
     clean: false
 

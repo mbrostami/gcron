@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"hash/fnv"
 	"io"
 	"log"
@@ -30,6 +31,10 @@ func main() {
 
 	// Override config file values
 	flag.Bool("out.tags", false, "Output tags")
+	flag.Bool("out.hide.systime", false, "Hide system time tag")
+	flag.Bool("out.hide.usertime", false, "Hide user time tag")
+	flag.Bool("out.hide.duration", false, "Hide duration tag")
+	flag.Bool("out.hide.uid", false, "Hide uid tag")
 	flag.Bool("out.clean", false, "Only command output")
 	flag.String("server.tcp.port", "", "TCP Server port")
 	flag.String("server.tcp.host", "", "TCP Server host")
@@ -141,12 +146,22 @@ func main() {
 
 		// Log tags
 		if cfg.Out.Tags == true {
+			var customOutput string
+			if !cfg.Out.Hide.UID {
+				customOutput += fmt.Sprintf("[uid:%vs] ", crontask.UID)
+			}
+			if !cfg.Out.Hide.SysTime {
+				customOutput += fmt.Sprintf("[systime:%vs] ", crontask.SystemTime.Seconds())
+			}
+			if !cfg.Out.Hide.UserTime {
+				customOutput += fmt.Sprintf("[usertime:%vs] ", crontask.UserTime.Seconds())
+			}
+			if !cfg.Out.Hide.Duration {
+				customOutput += fmt.Sprintf("[duration:%vs] ", crontask.EndTime.Sub(crontask.StartTime).Seconds())
+			}
 			log.Printf(
-				"[uid:%d] [duration:%vs] [systime:%vs] [usertime:%vs] [status:%v]",
-				crontask.UID,
-				crontask.EndTime.Sub(crontask.StartTime).Seconds(),
-				crontask.SystemTime.Seconds(),
-				crontask.UserTime.Seconds(),
+				"%s[status:%v]",
+				customOutput,
 				crontask.Success,
 			)
 		}
