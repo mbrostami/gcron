@@ -8,10 +8,12 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/mbrostami/gcron/configs"
 	"github.com/mbrostami/gcron/cron"
+	"github.com/mbrostami/gcron/helpers"
 	"github.com/mbrostami/gcron/output"
 
 	"github.com/rs/xid"
@@ -20,7 +22,9 @@ import (
 
 func main() {
 	executable := flag.String("exec", "echo", "Command to execute")
-	// flagLock := flag.Bool("lock", false, "Mutex lock")
+	// flagRunAfter := flag.Int("run.after", 0, "Run command after given seconds")
+	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
+	flagLockName := flag.String("lock.name", "", "Mutex name")
 
 	// Override config file values
 	flag.Bool("out.tags", false, "Output tags")
@@ -39,6 +43,23 @@ func main() {
 
 		hostname, _ := os.Hostname()
 		crontask.Hostname = hostname
+		crontask.UID = hash(crontask.Command)
+
+		var mtx *helpers.Mutex
+		if *flagLockEnabled {
+			mutexName := strconv.FormatUint(uint64(crontask.UID), 10)
+			if *flagLockName != "" {
+				mutexName = *flagLockName
+			}
+			mtx, err := helpers.NewMutex(mutexName)
+			if err != nil {
+				log.Fatalf("Couldn't create lock: %v", err)
+			}
+			locked, _ := mtx.Lock()
+			if !locked {
+				log.Fatal("Task is already running...")
+			}
+		}
 
 		// Setup log
 		log.SetFlags(0)
@@ -61,19 +82,19 @@ func main() {
 
 		stdOutReader, err := cmd.StdoutPipe()
 		if err != nil {
-			log.Printf("%v error: %s", os.Stderr, err)
-			os.Exit(1)
+			log.Fatalf("%v error: %s", os.Stderr, err)
 		}
 		stdErrReader, err := cmd.StderrPipe()
 		if err != nil {
-			log.Printf("%v error: %s", os.Stderr, err)
-			os.Exit(1)
+			log.Fatalf("%v error: %s", os.Stderr, err)
 		}
 
 		stdChan := make(chan []byte)
+		done := make(chan bool)
 		scanner := bufio.NewScanner(stdOutReader)
 		errScanner := bufio.NewScanner(stdErrReader)
 		crontask.GUID = xid.New().String() // sortable guid
+		// Stream output
 		go func() {
 			for scanner.Scan() {
 				stdChan <- scanner.Bytes()
@@ -82,6 +103,7 @@ func main() {
 				stdChan <- errScanner.Bytes()
 			}
 			close(stdChan)
+			done <- true
 		}()
 
 		crontask.StartTime = time.Now()
@@ -92,12 +114,15 @@ func main() {
 			log.Printf("%s", string(output))
 			crontask.Output = append(crontask.Output, output...)
 		}
+		<-done
+		if mtx != nil {
+			mtx.Release()
+		}
 		cmd.Wait()
 
 		proc, _ := process.NewProcess(int32(cmd.Process.Pid))
 		parent, _ := process.NewProcess(int32(os.Getppid()))
 		crontask.Parent, _ = parent.Name()
-		crontask.UID = hash(crontask.Command)
 		crontask.Username, _ = proc.Username()
 		crontask.Success = cmd.ProcessState.Success()
 		crontask.SystemTime = cmd.ProcessState.SystemTime()

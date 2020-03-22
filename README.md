@@ -24,6 +24,8 @@ Edit config.yml file and update log.path
 `go run main.go -exec="git status"`  
 ```
       --exec string               Command to execute (default "echo")
+      --lock.enable               Enable mutex lock
+      --lock.name string          Mutex name
       --out.clean                 Only command output
       --out.tags                  Output tags
       --server.tcp.host string    TCP Server host
