@@ -3,10 +3,8 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
 	"hash/fnv"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -18,8 +16,10 @@ import (
 	"github.com/mbrostami/gcron/output"
 	"github.com/mbrostami/gcron/validators"
 
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/rs/xid"
 	"github.com/shirou/gopsutil/process"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -32,13 +32,14 @@ func main() {
 	flag.Bool("out.hide.usertime", false, "Hide user time tag")
 	flag.Bool("out.hide.duration", false, "Hide duration tag")
 	flag.Bool("out.hide.uid", false, "Hide uid tag")
-	flag.Bool("out.clean", false, "Only command output")
+	// flag.Bool("out.clean", false, "Only command output")
 	flag.Bool("log.enable", false, "Enable log")
 	flag.String("server.tcp.port", "", "TCP Server port")
 	flag.String("server.tcp.host", "", "TCP Server host")
 	flag.String("server.udp.port", "", "UDP Server port")
 	flag.String("server.udp.host", "", "UDP Server host")
 	flag.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
+	flag.String("log.level", "warning", "Log level")
 
 	cfg := configs.GetConfig(flag.CommandLine)
 	crontask := cron.Task{
@@ -74,24 +75,25 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 			}
 		}
 
+		log.SetLevel(cfg.GetLogLevel())
 		// Setup log
-		log.SetFlags(0)
-		if cfg.Out.Clean == false {
-			log.SetFlags(log.Ldate | log.Ltime)
-		}
+		log.SetFormatter(&nested.Formatter{
+			NoColors: true,
+		})
+		// log.SetFormatter(&log.TextFormatter{})
 
 		// FIXME: Prevent IO Block
 		if cfg.Log.Enable {
 			f, err := os.OpenFile(cfg.Log.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 			if err != nil {
-				log.Fatalf("error opening file: %v", err)
+				log.Panicf("error opening file: %v", err)
 			}
 			defer f.Close()
-			wrt := io.MultiWriter(
+			writers := io.MultiWriter(
 				os.Stdout,
 				f,
 			)
-			log.SetOutput(wrt)
+			log.SetOutput(writers)
 		}
 
 		cmd := exec.Command("bash", "-c", crontask.Command)
@@ -113,9 +115,11 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		// Stream output
 		go func() {
 			for scanner.Scan() {
+				log.Infof("%s", string(scanner.Bytes()))
 				stdChan <- scanner.Bytes()
 			}
 			for errScanner.Scan() {
+				log.Warnf("%s", string(errScanner.Bytes()))
 				stdChan <- errScanner.Bytes()
 			}
 			close(stdChan)
@@ -128,7 +132,6 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		crontask.Pid = cmd.Process.Pid
 		var statusByRegex = false
 		for output := range stdChan {
-			log.Printf("%s", string(output))
 			crontask.Output = append(crontask.Output, output...)
 			if crontask.FOverride != "" {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
@@ -155,24 +158,22 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 
 		// Log tags
 		if cfg.Out.Tags == true {
-			var customOutput string
+			// var customOutput string
+			fields := log.Fields{}
 			if !cfg.Out.Hide.UID {
-				customOutput += fmt.Sprintf("[uid:%vs] ", crontask.UID)
+				fields["uid"] = crontask.UID
 			}
 			if !cfg.Out.Hide.SysTime {
-				customOutput += fmt.Sprintf("[systime:%vs] ", crontask.SystemTime.Seconds())
+				fields["systime"] = crontask.SystemTime.Seconds()
 			}
 			if !cfg.Out.Hide.UserTime {
-				customOutput += fmt.Sprintf("[usertime:%vs] ", crontask.UserTime.Seconds())
+				fields["usertime"] = crontask.UserTime.Seconds()
 			}
 			if !cfg.Out.Hide.Duration {
-				customOutput += fmt.Sprintf("[duration:%vs] ", crontask.EndTime.Sub(crontask.StartTime).Seconds())
+				fields["duration"] = crontask.EndTime.Sub(crontask.StartTime).Seconds()
 			}
-			log.Printf(
-				"%s[status:%v]",
-				customOutput,
-				crontask.Success,
-			)
+			fields["status"] = crontask.Success
+			log.WithFields(fields).Info("[tags]")
 		}
 		// Send crontask over tcp udp and unix socket
 		// FIXME: Stream output instead of sending all at once

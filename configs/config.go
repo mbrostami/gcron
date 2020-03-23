@@ -3,9 +3,9 @@ package configs
 import (
 	"flag"
 	"fmt"
-	"log/syslog"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -46,23 +46,21 @@ type Config struct {
 }
 
 // GetLogLevel finds the integer map to the log level string in config
-func (cfg *Config) GetLogLevel() syslog.Priority {
-	if cfg.Log.Level == "debug" {
-		return syslog.LOG_DEBUG
+func (cfg *Config) GetLogLevel() log.Level {
+	if cfg.Log.Level == "trace" {
+		return log.TraceLevel
+	} else if cfg.Log.Level == "debug" {
+		return log.DebugLevel
 	} else if cfg.Log.Level == "info" {
-		return syslog.LOG_INFO
-	} else if cfg.Log.Level == "notice" {
-		return syslog.LOG_NOTICE
+		return log.InfoLevel
 	} else if cfg.Log.Level == "warning" {
-		return syslog.LOG_WARNING
+		return log.WarnLevel
 	} else if cfg.Log.Level == "error" {
-		return syslog.LOG_ERR
-	} else if cfg.Log.Level == "critical" {
-		return syslog.LOG_CRIT
-	} else if cfg.Log.Level == "alert" {
-		return syslog.LOG_ALERT
+		return log.ErrorLevel
+	} else if cfg.Log.Level == "fatal" {
+		return log.FatalLevel
 	} else {
-		return syslog.LOG_EMERG
+		return log.PanicLevel
 	}
 }
 
