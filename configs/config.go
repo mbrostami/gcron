@@ -13,8 +13,9 @@ import (
 // Config map configs
 type Config struct {
 	Log struct {
-		Level string
-		Path  string
+		Enable bool
+		Level  string
+		Path   string
 	}
 	Out struct {
 		Clean bool

@@ -8,6 +8,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/rs/xid v1.2.1
 	github.com/shirou/gopsutil v2.20.2+incompatible
+	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.2
 	go.etcd.io/bbolt v1.3.4

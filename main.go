@@ -23,53 +23,31 @@ import (
 )
 
 func main() {
-	execFlagSet := flag.NewFlagSet("exec", flag.ExitOnError)
-	reportsFlagSet := flag.NewFlagSet("report", flag.ExitOnError)
+	executable := flag.String("c", "", "Command to execute")
+	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
+	flagLockName := flag.String("lock.name", "", "Mutex name")
+	flagOverride := flag.String("override", "", "Override command status by regex match in output")
+	flag.Bool("out.tags", false, "Output tags")
+	flag.Bool("out.hide.systime", false, "Hide system time tag")
+	flag.Bool("out.hide.usertime", false, "Hide user time tag")
+	flag.Bool("out.hide.duration", false, "Hide duration tag")
+	flag.Bool("out.hide.uid", false, "Hide uid tag")
+	flag.Bool("out.clean", false, "Only command output")
+	flag.Bool("log.enable", false, "Enable log")
+	flag.String("server.tcp.port", "", "TCP Server port")
+	flag.String("server.tcp.host", "", "TCP Server host")
+	flag.String("server.udp.port", "", "UDP Server port")
+	flag.String("server.udp.host", "", "UDP Server host")
+	flag.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
 
-	executable := execFlagSet.String("c", "", "Command to execute")
-	flagLockEnabled := execFlagSet.Bool("lock.enable", false, "Enable mutex lock")
-	flagLockName := execFlagSet.String("lock.name", "", "Mutex name")
-	flagOverride := execFlagSet.String("override", "", "Override command status by regex match in output")
-	execFlagSet.Bool("out.tags", false, "Output tags")
-	execFlagSet.Bool("out.hide.systime", false, "Hide system time tag")
-	execFlagSet.Bool("out.hide.usertime", false, "Hide user time tag")
-	execFlagSet.Bool("out.hide.duration", false, "Hide duration tag")
-	execFlagSet.Bool("out.hide.uid", false, "Hide uid tag")
-	execFlagSet.Bool("out.clean", false, "Only command output")
-	execFlagSet.String("server.tcp.port", "", "TCP Server port")
-	execFlagSet.String("server.tcp.host", "", "TCP Server host")
-	execFlagSet.String("server.udp.port", "", "UDP Server port")
-	execFlagSet.String("server.udp.host", "", "UDP Server host")
-	execFlagSet.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
-
-	reportsFlagSet.String("format", "text", "Test")
-	if len(os.Args) == 2 {
-		fmt.Println("usage: gcron <command> [<args>]")
-		fmt.Println("  exec     Execute command")
-		fmt.Println("  report   Generate reports")
-		fmt.Println("help: gcron <command> --help")
-
-		return
+	cfg := configs.GetConfig(flag.CommandLine)
+	crontask := cron.Task{
+		Command:   *executable,
+		FLock:     *flagLockEnabled,
+		FLockName: *flagLockName,
+		FOverride: *flagOverride,
 	}
-
-	switch os.Args[1] {
-	case "exec":
-		cfg := configs.GetConfig(execFlagSet)
-		crontask := cron.Task{
-			Command:   *executable,
-			FLock:     *flagLockEnabled,
-			FLockName: *flagLockName,
-			FOverride: *flagOverride,
-		}
-		processCommand(cfg, crontask)
-
-	case "report":
-		cfg := configs.GetConfig(reportsFlagSet)
-		report(cfg)
-	default:
-		fmt.Printf("%q is not valid command.\n", os.Args[1])
-		os.Exit(2)
-	}
+	processCommand(cfg, crontask)
 }
 
 func processCommand(cfg configs.Config, crontask cron.Task) {
@@ -101,17 +79,20 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		if cfg.Out.Clean == false {
 			log.SetFlags(log.Ldate | log.Ltime)
 		}
-		f, err := os.OpenFile(cfg.Log.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			log.Fatalf("error opening file: %v", err)
+
+		// FIXME: Prevent IO Block
+		if cfg.Log.Enable {
+			f, err := os.OpenFile(cfg.Log.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+			if err != nil {
+				log.Fatalf("error opening file: %v", err)
+			}
+			defer f.Close()
+			wrt := io.MultiWriter(
+				os.Stdout,
+				f,
+			)
+			log.SetOutput(wrt)
 		}
-		defer f.Close()
-		wrt := io.MultiWriter(
-			os.Stdout,
-			f,
-			// createSysLog(getConfig()),
-		)
-		log.SetOutput(wrt)
 
 		cmd := exec.Command("bash", "-c", crontask.Command)
 

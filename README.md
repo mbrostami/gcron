@@ -7,23 +7,19 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 ## TODO
 - [ ] Support different log formats for write/stream purpose 
 - [x] Mutex lock
-- [ ] Run cron every given seconds for n times (e.g. every 10 seconds, in total 6 times)
+- [ ] Run cron after given seconds
 - [x] Configurable tags (mem usage, cpu usage, systime, usertime, ...) (flag/config)
 - [x] Trackable id for logs
 - [x] Optional Regex status (Accept regex to change status of the cron to false or true)
   - [x] By default exitCode of the cron command will be used to detect if command was successful or failed
-- [ ] Report table - stdout (read given logs and display how many crons are logged, how many times they run and show time consuming crons ...)
-- [ ] Command line search by tags
-- [ ] Alert based on status 
 
 ## FIXME
 - Delete lock file
 
 ## Dev
 Edit config.yml file and update log.path   
-`go run main.go report ...`    
-`go run main.go exec -c="echo 111 && sleep 1 && echo 222"`   
-`go run main.go exec -c="git status"`  
+`go run main.go -c="echo 111 && sleep 1 && echo 222"`   
+`go run main.go -c="git status"`  
 ```
       --c                         Command to execute (default "echo")
       --lock.enable               Enable mutex lock (prevent running same process twice)
