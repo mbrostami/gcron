@@ -27,6 +27,7 @@ func main() {
 	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
 	flagLockName := flag.String("lock.name", "", "Mutex name")
 	flagOverride := flag.String("override", "", "Override command status by regex match in output")
+	flagDelay := flag.Int("delay", 0, "Delay running command in seconds")
 	flag.Bool("out.tags", false, "Output tags")
 	flag.Bool("out.hide.systime", false, "Hide system time tag")
 	flag.Bool("out.hide.usertime", false, "Hide user time tag")
@@ -47,6 +48,7 @@ func main() {
 		FLock:     *flagLockEnabled,
 		FLockName: *flagLockName,
 		FOverride: *flagOverride,
+		FDelay:    *flagDelay,
 	}
 	processCommand(cfg, crontask)
 }
@@ -94,6 +96,11 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 				f,
 			)
 			log.SetOutput(writers)
+		}
+
+		// Delay running command
+		if crontask.FDelay > 0 {
+			time.Sleep(time.Duration(crontask.FDelay) * time.Second)
 		}
 
 		cmd := exec.Command("bash", "-c", crontask.Command)

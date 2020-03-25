@@ -7,6 +7,7 @@ type Task struct {
 	FLock      bool
 	FLockName  string
 	FOverride  string
+	FDelay     int
 	Pid        int
 	GUID       string // global unique id
 	UID        uint32 // hash based on command string

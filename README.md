@@ -7,7 +7,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 ## TODO
 - [ ] Support different log formats for write/stream purpose 
 - [x] local mutex lock
-- [ ] Run cron after given seconds
+- [x] Run cron after given seconds
 - [ ] Network shared mutex lock
 - [ ] Implement gRPC
 - [x] Send output to remote server (tcp/udp/unix)
@@ -24,19 +24,21 @@ Edit config.yml file and update log.path
 `go run main.go -c="echo 111 && sleep 1 && echo 222"`   
 `go run main.go -c="git status"`  
 ```
-      --c                         Command to execute (default "echo")
-      --lock.enable               Enable mutex lock (prevent running same process twice)
-      --lock.name                 Mutex name (if it's not provided, uid will be used)
-      --out.clean                 Only command output
-      --out.hide.duration         Hide duration tag (default false)
-      --out.hide.systime          Hide system time tag (default false)
-      --out.hide.uid              Hide uid tag (default false)
-      --out.hide.usertime         Hide user time tag (default false)
-      --out.tags                  Output tags (default false)
-      --override                  Override command status by regex match in output (default "")
-      --server.tcp.host           TCP Server host
-      --server.tcp.port           TCP Server port
-      --server.udp.host           UDP Server host
-      --server.udp.port           UDP Server port
-      --server.unix.path          UNIX socket path (default "/tmp/gcron-server.sock")
+  -c, --c string                  Command to execute (default "")
+      --delay int                 Delay running command in seconds
+      --lock.enable               Enable mutex lock
+      --lock.name string          Mutex name
+      --log.enable                Enable log
+      --log.level string          Log level (default "warning")
+      --out.hide.duration         Hide duration tag
+      --out.hide.systime          Hide system time tag
+      --out.hide.uid              Hide uid tag
+      --out.hide.usertime         Hide user time tag
+      --out.tags                  Output tags
+      --override string           Override command status by regex match in output
+      --server.tcp.host string    TCP Server host
+      --server.tcp.port string    TCP Server port
+      --server.udp.host string    UDP Server host
+      --server.udp.port string    UDP Server port
+      --server.unix.path string   UNIX socket path (default "/tmp/gcron-server.sock")
 ```
