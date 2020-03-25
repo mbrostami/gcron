@@ -6,8 +6,11 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 [gcron-server](https://github.com/mbrostami/gcron-server)
 ## TODO
 - [ ] Support different log formats for write/stream purpose 
-- [x] Mutex lock
+- [x] local mutex lock
 - [ ] Run cron after given seconds
+- [ ] Network shared mutex lock
+- [ ] Implement gRPC
+- [x] Send output to remote server (tcp/udp/unix)
 - [x] Configurable tags (mem usage, cpu usage, systime, usertime, ...) (flag/config)
 - [x] Trackable id for logs
 - [x] Optional Regex status (Accept regex to change status of the cron to false or true)
