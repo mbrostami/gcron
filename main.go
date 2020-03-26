@@ -25,6 +25,7 @@ import (
 func main() {
 	executable := flag.String("c", "", "Command to execute")
 	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
+	flagLockRemote := flag.Bool("lock.remote", false, "Use rpc mutex lock")
 	flagLockName := flag.String("lock.name", "", "Mutex name")
 	flagOverride := flag.String("override", "", "Override command status by regex match in output")
 	flagDelay := flag.Int("delay", 0, "Delay running command in seconds")
@@ -52,14 +53,17 @@ func main() {
 		FOverride: *flagOverride,
 		FDelay:    *flagDelay,
 	}
-	processCommand(cfg, crontask)
+	processCommand(cfg, crontask, *flagLockRemote)
 }
 
-func processCommand(cfg configs.Config, crontask cron.Task) {
+func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 
 	if crontask.Validate() {
 
 		crontask.GUID = xid.New().String() // sortable guid
+		hostname, _ := os.Hostname()
+		crontask.Hostname = hostname
+		crontask.UID = hash(crontask.Command)
 
 		var grpcHandler output.GrpcHandler
 		if cfg.Server.RPC.Enabled {
@@ -70,14 +74,16 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 				log.Fatalf("%v", err)
 			}
 			log.Infof("RPC initialized.. %v", initialized)
+			if crontask.FLock && remoteLock { // remote lock can only be used with rpc
+				locked, _ := grpcHandler.Lock(strconv.FormatUint(uint64(crontask.UID), 10))
+				if !locked {
+					log.Fatal("Task is already running...")
+				}
+			}
 		}
 
-		hostname, _ := os.Hostname()
-		crontask.Hostname = hostname
-		crontask.UID = hash(crontask.Command)
-
 		var mtx *helpers.Mutex
-		if crontask.FLock {
+		if crontask.FLock && !remoteLock { // remotelock with locallock can not be enabled at the same time
 			mutexName := strconv.FormatUint(uint64(crontask.UID), 10)
 			if crontask.FLockName != "" {
 				mutexName = crontask.FLockName
@@ -163,8 +169,14 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 			}
 		}
 		<-done
-		if mtx != nil {
-			mtx.Release()
+		if crontask.FLock && remoteLock {
+			if cfg.Server.RPC.Enabled {
+				grpcHandler.Release(strconv.FormatUint(uint64(crontask.UID), 10))
+			}
+		} else if crontask.FLock && !remoteLock {
+			if mtx != nil {
+				mtx.Release()
+			}
 		}
 		cmd.Wait()
 		crontask.Success = cmd.ProcessState.Success()
