@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"hash/fnv"
 	"io"
@@ -10,14 +11,17 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/mbrostami/gcron/configs"
 	"github.com/mbrostami/gcron/cron"
+	pb "github.com/mbrostami/gcron/grpc"
 	"github.com/mbrostami/gcron/helpers"
 	"github.com/mbrostami/gcron/output"
 	"github.com/mbrostami/gcron/validators"
+	"github.com/rs/xid"
+	"google.golang.org/grpc"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
-	"github.com/rs/xid"
 	"github.com/shirou/gopsutil/process"
 	log "github.com/sirupsen/logrus"
 )
@@ -37,8 +41,10 @@ func main() {
 	flag.Bool("log.enable", false, "Enable log")
 	flag.String("server.tcp.port", "", "TCP Server port")
 	flag.String("server.tcp.host", "", "TCP Server host")
-	flag.String("server.udp.port", "", "UDP Server port")
 	flag.String("server.udp.host", "", "UDP Server host")
+	flag.String("server.udp.port", "", "UDP Server port")
+	flag.String("server.rpc.host", "", "RPC Server host")
+	flag.String("server.rpc.port", "", "RPC Server port")
 	flag.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
 	flag.String("log.level", "warning", "Log level")
 
@@ -56,6 +62,23 @@ func main() {
 func processCommand(cfg configs.Config, crontask cron.Task) {
 
 	if crontask.Validate() {
+
+		crontask.GUID = xid.New().String() // sortable guid
+
+		// var grpcClient pb.GcronClient
+		// if cfg.Server.RPC.Enabled {
+		grpcConn, err := grpc.Dial(cfg.Server.RPC.Host+":"+cfg.Server.RPC.Port, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("RPC dial failed: %v", err)
+		}
+		defer grpcConn.Close()
+		grpcClient := pb.NewGcronClient(grpcConn)
+		initialized, err := grpcClient.InitializeTask(context.Background(), &wrappers.StringValue{Value: crontask.GUID})
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+		log.Infof("RPC initialized.. %v", initialized.GetValue())
+		// }
 
 		hostname, _ := os.Hostname()
 		crontask.Hostname = hostname
@@ -114,7 +137,6 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 			log.Fatalf("%v error: %s", os.Stderr, err)
 		}
 
-		crontask.GUID = xid.New().String() // sortable guid
 		stdChan := make(chan []byte)
 		done := make(chan bool)
 		scanner := bufio.NewScanner(stdOutReader)
@@ -143,6 +165,9 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 			if crontask.FOverride != "" {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
+			if cfg.Server.RPC.Enabled {
+				grpcClient.Log(context.Background(), &wrappers.StringValue{Value: string(output)})
+			}
 		}
 		<-done
 		if mtx != nil {
@@ -163,6 +188,9 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		crontask.ExitCode = cmd.ProcessState.ExitCode()
 		crontask.EndTime = time.Now()
 
+		if cfg.Server.RPC.Enabled {
+			//grpcClient.FinializeTask(context.Background(), &wrappers.StringValue{Value: string(output)})
+		}
 		// Log tags
 		if cfg.Out.Tags == true {
 			// var customOutput string

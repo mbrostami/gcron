@@ -28,6 +28,11 @@ type Config struct {
 		}
 	}
 	Server struct {
+		RPC struct {
+			Enabled bool
+			Host    string
+			Port    string
+		}
 		TCP struct {
 			Enabled bool
 			Host    string
