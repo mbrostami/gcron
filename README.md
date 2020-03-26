@@ -7,7 +7,6 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 ## TODO
 - [ ] Support different log formats for write/stream purpose 
 - [x] local mutex lock
-- [ ] Stream logs over rpc
 - [x] Run cron after given seconds
 - [x] Network shared mutex lock
 - [x] Implement gRPC
@@ -16,6 +15,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - [x] Trackable id for logs
 - [x] Optional Regex status (Accept regex to change status of the cron to false or true)
   - [x] By default exitCode of the cron command will be used to detect if command was successful or failed
+- [ ] Stream logs over rpc
 
 ## FIXME
 - Delete local lock file
@@ -38,11 +38,15 @@ Edit config.yml file and update log.path
       --out.hide.usertime         Hide user time tag
       --out.tags                  Output tags
       --override string           Override command status by regex match in output
-      --server.tcp.host string    TCP Server host
-      --server.tcp.port string    TCP Server port
+      --server.rpc.enable         Enable RPC Server
       --server.rpc.host string    RPC Server host
       --server.rpc.port string    RPC Server port
+      --server.tcp.enable         Enable TCP Server
+      --server.tcp.host string    TCP Server host
+      --server.tcp.port string    TCP Server port
+      --server.udp.enable         Enable UDP Server
       --server.udp.host string    UDP Server host
       --server.udp.port string    UDP Server port
+      --server.unix.enable        Enable Unix socket
       --server.unix.path string   UNIX socket path (default "/tmp/gcron-server.sock")
 ```

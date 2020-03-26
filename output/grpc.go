@@ -3,6 +3,7 @@ package output
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/mbrostami/gcron/cron"
 	pb "github.com/mbrostami/gcron/grpc"
@@ -67,25 +68,27 @@ func (g GrpcHandler) Log(output string) (bool, error) {
 // Finish finialize the task
 func (g GrpcHandler) Finish(crontask cron.Task) (bool, error) {
 	// FIXME find a mapping solution
+	startTime, _ := ptypes.TimestampProto(crontask.StartTime)
+	endTime, _ := ptypes.TimestampProto(crontask.EndTime)
 	grpcTask := &pb.Task{
-		FLock:     crontask.FLock,
-		FLockName: crontask.FLockName,
-		FOverride: crontask.FOverride,
-		FDelay:    int32(crontask.FDelay),
-		Pid:       int32(crontask.Pid),
-		GUID:      crontask.GUID,
-		UID:       int32(crontask.UID),
-		Parent:    crontask.Parent,
-		Hostname:  crontask.Hostname,
-		Username:  crontask.Username,
-		Command:   crontask.Command,
-		// StartTime:  crontask.StartTime,
-		// EndTime: crontask.EndTime,
-		ExitCode: int32(crontask.ExitCode),
-		Output:   string(crontask.Output),
-		// SystemTime: crontask.SystemTime,
-		// UserTime: crontask.UserTime,
-		Success: crontask.Success,
+		FLock:      crontask.FLock,
+		FLockName:  crontask.FLockName,
+		FOverride:  crontask.FOverride,
+		FDelay:     int32(crontask.FDelay),
+		Pid:        int32(crontask.Pid),
+		GUID:       crontask.GUID,
+		UID:        crontask.UID,
+		Parent:     crontask.Parent,
+		Hostname:   crontask.Hostname,
+		Username:   crontask.Username,
+		Command:    crontask.Command,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitCode:   int32(crontask.ExitCode),
+		Output:     crontask.Output,
+		SystemTime: ptypes.DurationProto(crontask.SystemTime),
+		UserTime:   ptypes.DurationProto(crontask.UserTime),
+		Success:    crontask.Success,
 	}
 	finished, err := g.client.FinializeTask(context.Background(), grpcTask)
 	if err != nil {

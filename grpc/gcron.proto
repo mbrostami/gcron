@@ -4,6 +4,7 @@ package grpc;
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 service gcron {
     // Lock remote lock based on (HOSTNAME+USERNAME+UID) or Custom Lock Name
@@ -23,7 +24,7 @@ message Task {
   int32 FDelay = 4;
   int32 Pid = 5;
   string GUID = 6;
-  int32 UID = 7;
+  uint32 UID = 7;
   string Parent = 8;
   string Hostname = 9;
   string Username = 10;
@@ -31,8 +32,8 @@ message Task {
   google.protobuf.Timestamp StartTime = 12;
   google.protobuf.Timestamp EndTime = 13;
   int32 ExitCode = 14;
-  string Output = 15;
-  google.protobuf.Timestamp SystemTime = 16;
-  google.protobuf.Timestamp UserTime = 17;
+  bytes Output = 15;
+  google.protobuf.Duration SystemTime = 16;
+  google.protobuf.Duration UserTime = 17;
   bool Success = 18;
 }

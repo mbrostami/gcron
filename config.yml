@@ -3,7 +3,7 @@ server:
     rpc:
         enabled: true
         host: "localhost"
-        port: "1402"
+        port: "1400"
     tcp: 
         enabled: false
         host: "localhost"

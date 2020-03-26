@@ -60,6 +60,12 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 
 	if crontask.Validate() {
 
+		log.SetLevel(cfg.GetLogLevel())
+		// Setup log
+		log.SetFormatter(&nested.Formatter{
+			NoColors: true,
+		})
+
 		crontask.GUID = xid.New().String() // sortable guid
 		hostname, _ := os.Hostname()
 		crontask.Hostname = hostname
@@ -97,12 +103,6 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 				log.Fatal("Task is already running...")
 			}
 		}
-
-		log.SetLevel(cfg.GetLogLevel())
-		// Setup log
-		log.SetFormatter(&nested.Formatter{
-			NoColors: true,
-		})
 
 		// FIXME: Prevent IO Block
 		if cfg.Log.Enable {
