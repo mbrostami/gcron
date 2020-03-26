@@ -29,15 +29,6 @@ func NewGrpcHandler(host string, port string) (GrpcHandler, error) {
 	return g, nil
 }
 
-// Initialize send initialized task
-func (g GrpcHandler) Initialize(guid string) (bool, error) {
-	initialized, err := g.client.InitializeTask(context.Background(), &wrappers.StringValue{Value: guid})
-	if err != nil {
-		return false, err
-	}
-	return initialized.GetValue(), nil
-}
-
 // Lock try to lock
 func (g GrpcHandler) Lock(lockName string) (bool, error) {
 	locked, err := g.client.Lock(context.Background(), &wrappers.StringValue{Value: lockName})
@@ -57,8 +48,8 @@ func (g GrpcHandler) Release(lockName string) (bool, error) {
 }
 
 // Log send string
-func (g GrpcHandler) Log(output string) (bool, error) {
-	logged, err := g.client.Log(context.Background(), &wrappers.StringValue{Value: output})
+func (g GrpcHandler) Log(guid string, output []byte) (bool, error) {
+	logged, err := g.client.Log(context.Background(), &pb.LogEntry{GUID: guid, Output: output})
 	if err != nil {
 		return false, err
 	}

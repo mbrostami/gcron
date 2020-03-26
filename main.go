@@ -75,11 +75,6 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		if cfg.Server.RPC.Enabled {
 			grpcHandler, _ = output.NewGrpcHandler(cfg.Server.RPC.Host, cfg.Server.RPC.Port)
 			defer grpcHandler.Close()
-			initialized, err := grpcHandler.Initialize(crontask.GUID)
-			if err != nil {
-				log.Fatalf("%v", err)
-			}
-			log.Infof("RPC initialized.. %v", initialized)
 			if crontask.FLock && remoteLock { // remote lock can only be used with rpc
 				locked, _ := grpcHandler.Lock(strconv.FormatUint(uint64(crontask.UID), 10))
 				if !locked {
@@ -165,7 +160,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
 			if cfg.Server.RPC.Enabled {
-				grpcHandler.Log(string(output))
+				grpcHandler.Log(crontask.GUID, output)
 			}
 		}
 		<-done
