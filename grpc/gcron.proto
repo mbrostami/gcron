@@ -18,20 +18,21 @@ service gcron {
 
 message Task {
   bool FLock = 1;
-  string FOverride = 2;
-  int32 FDelay = 3;
-  int32 Pid = 4;
-  string GUID = 5;
-  int32 UID = 6;
-  string Parent = 7;
-  string Hostname = 8;
-  string Username = 9;
-  string Command = 10;
-  google.protobuf.Timestamp StartTime = 11;
-  google.protobuf.Timestamp EndTime = 12;
-  int32 ExitCode = 13;
-  string Output = 14;
-  google.protobuf.Timestamp SystemTime = 15;
-  google.protobuf.Timestamp UserTime = 16;
-  bool Success = 17;
+  string FLockName = 2;
+  string FOverride = 3;
+  int32 FDelay = 4;
+  int32 Pid = 5;
+  string GUID = 6;
+  int32 UID = 7;
+  string Parent = 8;
+  string Hostname = 9;
+  string Username = 10;
+  string Command = 11;
+  google.protobuf.Timestamp StartTime = 12;
+  google.protobuf.Timestamp EndTime = 13;
+  int32 ExitCode = 14;
+  string Output = 15;
+  google.protobuf.Timestamp SystemTime = 16;
+  google.protobuf.Timestamp UserTime = 17;
+  bool Success = 18;
 }

@@ -65,20 +65,20 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 
 		crontask.GUID = xid.New().String() // sortable guid
 
-		// var grpcClient pb.GcronClient
-		// if cfg.Server.RPC.Enabled {
-		grpcConn, err := grpc.Dial(cfg.Server.RPC.Host+":"+cfg.Server.RPC.Port, grpc.WithInsecure())
-		if err != nil {
-			log.Fatalf("RPC dial failed: %v", err)
+		var grpcClient pb.GcronClient
+		if cfg.Server.RPC.Enabled {
+			grpcConn, err := grpc.Dial(cfg.Server.RPC.Host+":"+cfg.Server.RPC.Port, grpc.WithInsecure())
+			if err != nil {
+				log.Fatalf("RPC dial failed: %v", err)
+			}
+			defer grpcConn.Close()
+			grpcClient = pb.NewGcronClient(grpcConn)
+			initialized, err := grpcClient.InitializeTask(context.Background(), &wrappers.StringValue{Value: crontask.GUID})
+			if err != nil {
+				log.Fatalf("%v", err)
+			}
+			log.Infof("RPC initialized.. %v", initialized.GetValue())
 		}
-		defer grpcConn.Close()
-		grpcClient := pb.NewGcronClient(grpcConn)
-		initialized, err := grpcClient.InitializeTask(context.Background(), &wrappers.StringValue{Value: crontask.GUID})
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
-		log.Infof("RPC initialized.. %v", initialized.GetValue())
-		// }
 
 		hostname, _ := os.Hostname()
 		crontask.Hostname = hostname
@@ -105,7 +105,6 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		log.SetFormatter(&nested.Formatter{
 			NoColors: true,
 		})
-		// log.SetFormatter(&log.TextFormatter{})
 
 		// FIXME: Prevent IO Block
 		if cfg.Log.Enable {
@@ -119,6 +118,8 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 				f,
 			)
 			log.SetOutput(writers)
+		} else {
+			log.SetOutput(os.Stdout)
 		}
 
 		// Delay running command
@@ -189,7 +190,28 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		crontask.EndTime = time.Now()
 
 		if cfg.Server.RPC.Enabled {
-			//grpcClient.FinializeTask(context.Background(), &wrappers.StringValue{Value: string(output)})
+			// FIXME find a mapping solution
+			grpcTask := &pb.Task{
+				FLock:     crontask.FLock,
+				FLockName: crontask.FLockName,
+				FOverride: crontask.FOverride,
+				FDelay:    int32(crontask.FDelay),
+				Pid:       int32(crontask.Pid),
+				GUID:      crontask.GUID,
+				UID:       int32(crontask.UID),
+				Parent:    crontask.Parent,
+				Hostname:  crontask.Hostname,
+				Username:  crontask.Username,
+				Command:   crontask.Command,
+				// StartTime:  crontask.StartTime,
+				// EndTime: crontask.EndTime,
+				ExitCode: int32(crontask.ExitCode),
+				Output:   string(crontask.Output),
+				// SystemTime: crontask.SystemTime,
+				// UserTime: crontask.UserTime,
+				Success: crontask.Success,
+			}
+			grpcClient.FinializeTask(context.Background(), grpcTask)
 		}
 		// Log tags
 		if cfg.Out.Tags == true {
