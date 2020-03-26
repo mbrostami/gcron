@@ -7,6 +7,8 @@ import (
 	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -24,108 +26,175 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type Point struct {
-	Latitude             int32    `protobuf:"varint,1,opt,name=latitude,proto3" json:"latitude,omitempty"`
-	Longitude            int32    `protobuf:"varint,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+type Task struct {
+	FLock                bool                 `protobuf:"varint,1,opt,name=FLock,proto3" json:"FLock,omitempty"`
+	FOverride            string               `protobuf:"bytes,2,opt,name=FOverride,proto3" json:"FOverride,omitempty"`
+	FDelay               int32                `protobuf:"varint,3,opt,name=FDelay,proto3" json:"FDelay,omitempty"`
+	Pid                  int32                `protobuf:"varint,4,opt,name=Pid,proto3" json:"Pid,omitempty"`
+	GUID                 string               `protobuf:"bytes,5,opt,name=GUID,proto3" json:"GUID,omitempty"`
+	UID                  int32                `protobuf:"varint,6,opt,name=UID,proto3" json:"UID,omitempty"`
+	Parent               string               `protobuf:"bytes,7,opt,name=Parent,proto3" json:"Parent,omitempty"`
+	Hostname             string               `protobuf:"bytes,8,opt,name=Hostname,proto3" json:"Hostname,omitempty"`
+	Username             string               `protobuf:"bytes,9,opt,name=Username,proto3" json:"Username,omitempty"`
+	Command              string               `protobuf:"bytes,10,opt,name=Command,proto3" json:"Command,omitempty"`
+	StartTime            *timestamp.Timestamp `protobuf:"bytes,11,opt,name=StartTime,proto3" json:"StartTime,omitempty"`
+	EndTime              *timestamp.Timestamp `protobuf:"bytes,12,opt,name=EndTime,proto3" json:"EndTime,omitempty"`
+	ExitCode             int32                `protobuf:"varint,13,opt,name=ExitCode,proto3" json:"ExitCode,omitempty"`
+	Output               string               `protobuf:"bytes,14,opt,name=Output,proto3" json:"Output,omitempty"`
+	SystemTime           *timestamp.Timestamp `protobuf:"bytes,15,opt,name=SystemTime,proto3" json:"SystemTime,omitempty"`
+	UserTime             *timestamp.Timestamp `protobuf:"bytes,16,opt,name=UserTime,proto3" json:"UserTime,omitempty"`
+	Success              bool                 `protobuf:"varint,17,opt,name=Success,proto3" json:"Success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *Point) Reset()         { *m = Point{} }
-func (m *Point) String() string { return proto.CompactTextString(m) }
-func (*Point) ProtoMessage()    {}
-func (*Point) Descriptor() ([]byte, []int) {
+func (m *Task) Reset()         { *m = Task{} }
+func (m *Task) String() string { return proto.CompactTextString(m) }
+func (*Task) ProtoMessage()    {}
+func (*Task) Descriptor() ([]byte, []int) {
 	return fileDescriptor_fd548e04c98879c7, []int{0}
 }
 
-func (m *Point) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Point.Unmarshal(m, b)
+func (m *Task) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Task.Unmarshal(m, b)
 }
-func (m *Point) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Point.Marshal(b, m, deterministic)
+func (m *Task) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Task.Marshal(b, m, deterministic)
 }
-func (m *Point) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Point.Merge(m, src)
+func (m *Task) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Task.Merge(m, src)
 }
-func (m *Point) XXX_Size() int {
-	return xxx_messageInfo_Point.Size(m)
+func (m *Task) XXX_Size() int {
+	return xxx_messageInfo_Task.Size(m)
 }
-func (m *Point) XXX_DiscardUnknown() {
-	xxx_messageInfo_Point.DiscardUnknown(m)
+func (m *Task) XXX_DiscardUnknown() {
+	xxx_messageInfo_Task.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Point proto.InternalMessageInfo
+var xxx_messageInfo_Task proto.InternalMessageInfo
 
-func (m *Point) GetLatitude() int32 {
+func (m *Task) GetFLock() bool {
 	if m != nil {
-		return m.Latitude
+		return m.FLock
 	}
-	return 0
+	return false
 }
 
-func (m *Point) GetLongitude() int32 {
+func (m *Task) GetFOverride() string {
 	if m != nil {
-		return m.Longitude
-	}
-	return 0
-}
-
-// A feature names something at a given point.
-//
-// If a feature could not be named, the name is empty.
-type Feature struct {
-	// The name of the feature.
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The point where the feature is detected.
-	Location             *Point   `protobuf:"bytes,2,opt,name=location,proto3" json:"location,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Feature) Reset()         { *m = Feature{} }
-func (m *Feature) String() string { return proto.CompactTextString(m) }
-func (*Feature) ProtoMessage()    {}
-func (*Feature) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fd548e04c98879c7, []int{1}
-}
-
-func (m *Feature) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Feature.Unmarshal(m, b)
-}
-func (m *Feature) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Feature.Marshal(b, m, deterministic)
-}
-func (m *Feature) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Feature.Merge(m, src)
-}
-func (m *Feature) XXX_Size() int {
-	return xxx_messageInfo_Feature.Size(m)
-}
-func (m *Feature) XXX_DiscardUnknown() {
-	xxx_messageInfo_Feature.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Feature proto.InternalMessageInfo
-
-func (m *Feature) GetName() string {
-	if m != nil {
-		return m.Name
+		return m.FOverride
 	}
 	return ""
 }
 
-func (m *Feature) GetLocation() *Point {
+func (m *Task) GetFDelay() int32 {
 	if m != nil {
-		return m.Location
+		return m.FDelay
+	}
+	return 0
+}
+
+func (m *Task) GetPid() int32 {
+	if m != nil {
+		return m.Pid
+	}
+	return 0
+}
+
+func (m *Task) GetGUID() string {
+	if m != nil {
+		return m.GUID
+	}
+	return ""
+}
+
+func (m *Task) GetUID() int32 {
+	if m != nil {
+		return m.UID
+	}
+	return 0
+}
+
+func (m *Task) GetParent() string {
+	if m != nil {
+		return m.Parent
+	}
+	return ""
+}
+
+func (m *Task) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
+
+func (m *Task) GetUsername() string {
+	if m != nil {
+		return m.Username
+	}
+	return ""
+}
+
+func (m *Task) GetCommand() string {
+	if m != nil {
+		return m.Command
+	}
+	return ""
+}
+
+func (m *Task) GetStartTime() *timestamp.Timestamp {
+	if m != nil {
+		return m.StartTime
 	}
 	return nil
 }
 
+func (m *Task) GetEndTime() *timestamp.Timestamp {
+	if m != nil {
+		return m.EndTime
+	}
+	return nil
+}
+
+func (m *Task) GetExitCode() int32 {
+	if m != nil {
+		return m.ExitCode
+	}
+	return 0
+}
+
+func (m *Task) GetOutput() string {
+	if m != nil {
+		return m.Output
+	}
+	return ""
+}
+
+func (m *Task) GetSystemTime() *timestamp.Timestamp {
+	if m != nil {
+		return m.SystemTime
+	}
+	return nil
+}
+
+func (m *Task) GetUserTime() *timestamp.Timestamp {
+	if m != nil {
+		return m.UserTime
+	}
+	return nil
+}
+
+func (m *Task) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
-	proto.RegisterType((*Point)(nil), "grpc.Point")
-	proto.RegisterType((*Feature)(nil), "grpc.Feature")
+	proto.RegisterType((*Task)(nil), "grpc.Task")
 }
 
 func init() {
@@ -133,18 +202,34 @@ func init() {
 }
 
 var fileDescriptor_fd548e04c98879c7 = []byte{
-	// 168 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0x4f, 0x2e, 0xca,
-	0xcf, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x49, 0x2f, 0x2a, 0x48, 0x56, 0x72, 0xe4,
-	0x62, 0x0d, 0xc8, 0xcf, 0xcc, 0x2b, 0x11, 0x92, 0xe2, 0xe2, 0xc8, 0x49, 0x2c, 0xc9, 0x2c, 0x29,
-	0x4d, 0x49, 0x95, 0x60, 0x54, 0x60, 0xd4, 0x60, 0x0d, 0x82, 0xf3, 0x85, 0x64, 0xb8, 0x38, 0x73,
-	0xf2, 0xf3, 0xd2, 0x21, 0x92, 0x4c, 0x60, 0x49, 0x84, 0x80, 0x92, 0x1b, 0x17, 0xbb, 0x5b, 0x6a,
-	0x62, 0x49, 0x69, 0x51, 0xaa, 0x90, 0x10, 0x17, 0x4b, 0x5e, 0x62, 0x2e, 0xc4, 0x00, 0xce, 0x20,
-	0x30, 0x5b, 0x48, 0x9d, 0x8b, 0x23, 0x27, 0x3f, 0x39, 0xb1, 0x24, 0x33, 0x3f, 0x0f, 0xac, 0x97,
-	0xdb, 0x88, 0x5b, 0x0f, 0x64, 0xb5, 0x1e, 0xd8, 0xde, 0x20, 0xb8, 0xa4, 0x91, 0x31, 0x17, 0x2b,
-	0xd8, 0x7d, 0x42, 0x5a, 0x5c, 0x5c, 0xee, 0xa9, 0x25, 0x30, 0x33, 0x91, 0x55, 0x4b, 0xf1, 0x42,
-	0x38, 0x50, 0x39, 0x25, 0x86, 0x24, 0x36, 0xb0, 0x67, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff,
-	0xfa, 0x74, 0x15, 0x1e, 0xdb, 0x00, 0x00, 0x00,
+	// 422 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xcd, 0x6e, 0xd4, 0x30,
+	0x10, 0x26, 0x6c, 0xf6, 0x6f, 0x96, 0x96, 0x62, 0xa1, 0xca, 0x8a, 0x2a, 0x88, 0x7a, 0xca, 0x29,
+	0x95, 0x0a, 0x42, 0xc0, 0x0d, 0xda, 0x06, 0x2a, 0xad, 0xd4, 0x2a, 0xd9, 0x72, 0x77, 0x13, 0x13,
+	0x59, 0x4d, 0xec, 0xc8, 0x76, 0x80, 0xf2, 0x40, 0xbc, 0x10, 0x2f, 0x84, 0x3c, 0x6e, 0xb6, 0x15,
+	0x2b, 0xb1, 0x07, 0x6e, 0xf3, 0xfd, 0xcc, 0x8c, 0x67, 0x34, 0x86, 0x45, 0x5d, 0x6a, 0x25, 0xd3,
+	0x4e, 0x2b, 0xab, 0x48, 0x58, 0xeb, 0xae, 0x8c, 0x5e, 0xd4, 0x4a, 0xd5, 0x0d, 0x3f, 0x42, 0xee,
+	0xba, 0xff, 0x7a, 0xf4, 0x5d, 0xb3, 0xae, 0xe3, 0xda, 0x78, 0x57, 0xf4, 0xf2, 0x6f, 0xdd, 0x8a,
+	0x96, 0x1b, 0xcb, 0xda, 0xce, 0x1b, 0x0e, 0x7f, 0x85, 0x10, 0xae, 0x98, 0xb9, 0x21, 0xcf, 0x61,
+	0x9c, 0x2d, 0x55, 0x79, 0x43, 0x83, 0x38, 0x48, 0x66, 0xb9, 0x07, 0xe4, 0x00, 0xe6, 0xd9, 0xc5,
+	0x37, 0xae, 0xb5, 0xa8, 0x38, 0x7d, 0x1c, 0x07, 0xc9, 0x3c, 0xbf, 0x27, 0xc8, 0x3e, 0x4c, 0xb2,
+	0x53, 0xde, 0xb0, 0x5b, 0x3a, 0x8a, 0x83, 0x64, 0x9c, 0xdf, 0x21, 0xb2, 0x07, 0xa3, 0x4b, 0x51,
+	0xd1, 0x10, 0x49, 0x17, 0x12, 0x02, 0xe1, 0xa7, 0xab, 0xf3, 0x53, 0x3a, 0xc6, 0x12, 0x18, 0x3b,
+	0x97, 0xa3, 0x26, 0xde, 0xe5, 0x98, 0x7d, 0x98, 0x5c, 0x32, 0xcd, 0xa5, 0xa5, 0x53, 0xf4, 0xdd,
+	0x21, 0x12, 0xc1, 0xec, 0xb3, 0x32, 0x56, 0xb2, 0x96, 0xd3, 0x19, 0x2a, 0x6b, 0xec, 0xb4, 0x2b,
+	0xc3, 0x35, 0x6a, 0x73, 0xaf, 0x0d, 0x98, 0x50, 0x98, 0x9e, 0xa8, 0xb6, 0x65, 0xb2, 0xa2, 0x80,
+	0xd2, 0x00, 0xc9, 0x5b, 0x98, 0x17, 0x96, 0x69, 0xbb, 0x12, 0x2d, 0xa7, 0x8b, 0x38, 0x48, 0x16,
+	0xc7, 0x51, 0xea, 0x77, 0x95, 0x0e, 0xbb, 0x4a, 0x57, 0xc3, 0xae, 0xf2, 0x7b, 0x33, 0x79, 0x0d,
+	0xd3, 0x33, 0x59, 0x61, 0xde, 0x93, 0xad, 0x79, 0x83, 0xd5, 0xbd, 0xf2, 0xec, 0x87, 0xb0, 0x27,
+	0xaa, 0xe2, 0x74, 0x07, 0x07, 0x5e, 0x63, 0x37, 0xf5, 0x45, 0x6f, 0xbb, 0xde, 0xd2, 0x5d, 0x3f,
+	0xb5, 0x47, 0xe4, 0x3d, 0x40, 0x71, 0x6b, 0x2c, 0x6f, 0xb1, 0xd9, 0xd3, 0xad, 0xcd, 0x1e, 0xb8,
+	0xc9, 0x1b, 0xbf, 0x15, 0xcc, 0xdc, 0xdb, 0x9a, 0xb9, 0xf6, 0xba, 0x8d, 0x15, 0x7d, 0x59, 0x72,
+	0x63, 0xe8, 0x33, 0xbc, 0x83, 0x01, 0x1e, 0xff, 0x0e, 0x60, 0x8c, 0xf7, 0x47, 0x96, 0xb0, 0x7b,
+	0x2e, 0x85, 0x15, 0xac, 0x11, 0x3f, 0x39, 0xde, 0xce, 0xc1, 0x46, 0xed, 0xc2, 0x6a, 0x21, 0xeb,
+	0x2f, 0xac, 0xe9, 0x79, 0xb4, 0xd9, 0xf9, 0xa3, 0x52, 0x0d, 0x6a, 0x87, 0x8f, 0xc8, 0x07, 0x18,
+	0x2d, 0x55, 0xfd, 0x5f, 0x25, 0xde, 0xc1, 0x4e, 0x26, 0xe4, 0x83, 0xf7, 0x40, 0xea, 0x3e, 0x47,
+	0xea, 0xe2, 0x7f, 0xa7, 0x5e, 0x4f, 0x90, 0x7d, 0xf5, 0x27, 0x00, 0x00, 0xff, 0xff, 0xd9, 0x77,
+	0xce, 0x4a, 0x5b, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -159,7 +244,9 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GcronClient interface {
-	GetFeature(ctx context.Context, in *Point, opts ...grpc.CallOption) (*Feature, error)
+	InitializeTask(ctx context.Context, in *wrappers.StringValue, opts ...grpc.CallOption) (*wrappers.BoolValue, error)
+	Log(ctx context.Context, in *wrappers.StringValue, opts ...grpc.CallOption) (*wrappers.BoolValue, error)
+	FinializeTask(ctx context.Context, in *Task, opts ...grpc.CallOption) (*wrappers.BoolValue, error)
 }
 
 type gcronClient struct {
@@ -170,9 +257,27 @@ func NewGcronClient(cc grpc.ClientConnInterface) GcronClient {
 	return &gcronClient{cc}
 }
 
-func (c *gcronClient) GetFeature(ctx context.Context, in *Point, opts ...grpc.CallOption) (*Feature, error) {
-	out := new(Feature)
-	err := c.cc.Invoke(ctx, "/grpc.gcron/GetFeature", in, out, opts...)
+func (c *gcronClient) InitializeTask(ctx context.Context, in *wrappers.StringValue, opts ...grpc.CallOption) (*wrappers.BoolValue, error) {
+	out := new(wrappers.BoolValue)
+	err := c.cc.Invoke(ctx, "/grpc.gcron/InitializeTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gcronClient) Log(ctx context.Context, in *wrappers.StringValue, opts ...grpc.CallOption) (*wrappers.BoolValue, error) {
+	out := new(wrappers.BoolValue)
+	err := c.cc.Invoke(ctx, "/grpc.gcron/Log", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gcronClient) FinializeTask(ctx context.Context, in *Task, opts ...grpc.CallOption) (*wrappers.BoolValue, error) {
+	out := new(wrappers.BoolValue)
+	err := c.cc.Invoke(ctx, "/grpc.gcron/FinializeTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,35 +286,79 @@ func (c *gcronClient) GetFeature(ctx context.Context, in *Point, opts ...grpc.Ca
 
 // GcronServer is the server API for Gcron service.
 type GcronServer interface {
-	GetFeature(context.Context, *Point) (*Feature, error)
+	InitializeTask(context.Context, *wrappers.StringValue) (*wrappers.BoolValue, error)
+	Log(context.Context, *wrappers.StringValue) (*wrappers.BoolValue, error)
+	FinializeTask(context.Context, *Task) (*wrappers.BoolValue, error)
 }
 
 // UnimplementedGcronServer can be embedded to have forward compatible implementations.
 type UnimplementedGcronServer struct {
 }
 
-func (*UnimplementedGcronServer) GetFeature(ctx context.Context, req *Point) (*Feature, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFeature not implemented")
+func (*UnimplementedGcronServer) InitializeTask(ctx context.Context, req *wrappers.StringValue) (*wrappers.BoolValue, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitializeTask not implemented")
+}
+func (*UnimplementedGcronServer) Log(ctx context.Context, req *wrappers.StringValue) (*wrappers.BoolValue, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Log not implemented")
+}
+func (*UnimplementedGcronServer) FinializeTask(ctx context.Context, req *Task) (*wrappers.BoolValue, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FinializeTask not implemented")
 }
 
 func RegisterGcronServer(s *grpc.Server, srv GcronServer) {
 	s.RegisterService(&_Gcron_serviceDesc, srv)
 }
 
-func _Gcron_GetFeature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Point)
+func _Gcron_InitializeTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(wrappers.StringValue)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GcronServer).GetFeature(ctx, in)
+		return srv.(GcronServer).InitializeTask(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/grpc.gcron/GetFeature",
+		FullMethod: "/grpc.gcron/InitializeTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GcronServer).GetFeature(ctx, req.(*Point))
+		return srv.(GcronServer).InitializeTask(ctx, req.(*wrappers.StringValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gcron_Log_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(wrappers.StringValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GcronServer).Log(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.gcron/Log",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GcronServer).Log(ctx, req.(*wrappers.StringValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gcron_FinializeTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Task)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GcronServer).FinializeTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.gcron/FinializeTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GcronServer).FinializeTask(ctx, req.(*Task))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -219,8 +368,16 @@ var _Gcron_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*GcronServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetFeature",
-			Handler:    _Gcron_GetFeature_Handler,
+			MethodName: "InitializeTask",
+			Handler:    _Gcron_InitializeTask_Handler,
+		},
+		{
+			MethodName: "Log",
+			Handler:    _Gcron_Log_Handler,
+		},
+		{
+			MethodName: "FinializeTask",
+			Handler:    _Gcron_FinializeTask_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

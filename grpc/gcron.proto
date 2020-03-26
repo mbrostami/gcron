@@ -2,22 +2,31 @@ syntax = "proto3";
 
 package grpc;
 
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
 service gcron {
-    rpc GetFeature(Point) returns (Feature) {}
+    rpc InitializeTask(google.protobuf.StringValue) returns (google.protobuf.BoolValue) {}
+    rpc Log(google.protobuf.StringValue) returns (google.protobuf.BoolValue) {}
+    rpc FinializeTask(Task) returns (google.protobuf.BoolValue) {}
 }
 
-message Point {
-  int32 latitude = 1;
-  int32 longitude = 2;
-}
-
-// A feature names something at a given point.
-//
-// If a feature could not be named, the name is empty.
-message Feature {
-  // The name of the feature.
-  string name = 1;
-
-  // The point where the feature is detected.
-  Point location = 2;
+message Task {
+  bool FLock = 1;
+  string FOverride = 2;
+  int32 FDelay = 3;
+  int32 Pid = 4;
+  string GUID = 5;
+  int32 UID = 6;
+  string Parent = 7;
+  string Hostname = 8;
+  string Username = 9;
+  string Command = 10;
+  google.protobuf.Timestamp StartTime = 11;
+  google.protobuf.Timestamp EndTime = 12;
+  int32 ExitCode = 13;
+  string Output = 14;
+  google.protobuf.Timestamp SystemTime = 15;
+  google.protobuf.Timestamp UserTime = 16;
+  bool Success = 17;
 }
