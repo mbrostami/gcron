@@ -39,7 +39,7 @@ func (g GrpcHandler) Initialize(guid string) (bool, error) {
 
 // Lock try to lock
 func (g GrpcHandler) Lock(lockName string) (bool, error) {
-	locked, _ := g.client.Lock(context.Background(), &wrappers.StringValue{Value: lockName})
+	locked, err := g.client.Lock(context.Background(), &wrappers.StringValue{Value: lockName})
 	if err != nil {
 		return false, err
 	}
@@ -48,7 +48,7 @@ func (g GrpcHandler) Lock(lockName string) (bool, error) {
 
 // Release try to lock
 func (g GrpcHandler) Release(lockName string) (bool, error) {
-	released, _ := g.client.Release(context.Background(), &wrappers.StringValue{Value: lockName})
+	released, err := g.client.Release(context.Background(), &wrappers.StringValue{Value: lockName})
 	if err != nil {
 		return false, err
 	}
