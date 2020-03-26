@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"flag"
 	"hash/fnv"
 	"io"
@@ -11,15 +10,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/mbrostami/gcron/configs"
 	"github.com/mbrostami/gcron/cron"
-	pb "github.com/mbrostami/gcron/grpc"
 	"github.com/mbrostami/gcron/helpers"
 	"github.com/mbrostami/gcron/output"
 	"github.com/mbrostami/gcron/validators"
 	"github.com/rs/xid"
-	"google.golang.org/grpc"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/shirou/gopsutil/process"
@@ -65,19 +61,15 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 
 		crontask.GUID = xid.New().String() // sortable guid
 
-		var grpcClient pb.GcronClient
+		var grpcHandler output.GrpcHandler
 		if cfg.Server.RPC.Enabled {
-			grpcConn, err := grpc.Dial(cfg.Server.RPC.Host+":"+cfg.Server.RPC.Port, grpc.WithInsecure())
-			if err != nil {
-				log.Fatalf("RPC dial failed: %v", err)
-			}
-			defer grpcConn.Close()
-			grpcClient = pb.NewGcronClient(grpcConn)
-			initialized, err := grpcClient.InitializeTask(context.Background(), &wrappers.StringValue{Value: crontask.GUID})
+			grpcHandler, _ = output.NewGrpcHandler(cfg.Server.RPC.Host, cfg.Server.RPC.Port)
+			defer grpcHandler.Close()
+			initialized, err := grpcHandler.Initialize(crontask.GUID)
 			if err != nil {
 				log.Fatalf("%v", err)
 			}
-			log.Infof("RPC initialized.. %v", initialized.GetValue())
+			log.Infof("RPC initialized.. %v", initialized)
 		}
 
 		hostname, _ := os.Hostname()
@@ -167,7 +159,7 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
 			if cfg.Server.RPC.Enabled {
-				grpcClient.Log(context.Background(), &wrappers.StringValue{Value: string(output)})
+				grpcHandler.Log(string(output))
 			}
 		}
 		<-done
@@ -190,28 +182,7 @@ func processCommand(cfg configs.Config, crontask cron.Task) {
 		crontask.EndTime = time.Now()
 
 		if cfg.Server.RPC.Enabled {
-			// FIXME find a mapping solution
-			grpcTask := &pb.Task{
-				FLock:     crontask.FLock,
-				FLockName: crontask.FLockName,
-				FOverride: crontask.FOverride,
-				FDelay:    int32(crontask.FDelay),
-				Pid:       int32(crontask.Pid),
-				GUID:      crontask.GUID,
-				UID:       int32(crontask.UID),
-				Parent:    crontask.Parent,
-				Hostname:  crontask.Hostname,
-				Username:  crontask.Username,
-				Command:   crontask.Command,
-				// StartTime:  crontask.StartTime,
-				// EndTime: crontask.EndTime,
-				ExitCode: int32(crontask.ExitCode),
-				Output:   string(crontask.Output),
-				// SystemTime: crontask.SystemTime,
-				// UserTime: crontask.UserTime,
-				Success: crontask.Success,
-			}
-			grpcClient.FinializeTask(context.Background(), grpcTask)
+			grpcHandler.Finish(crontask)
 		}
 		// Log tags
 		if cfg.Out.Tags == true {
