@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/alexflint/go-filemutex v1.0.0
-	github.com/antonfisher/nested-logrus-formatter v1.0.3 // indirect
+	github.com/antonfisher/nested-logrus-formatter v1.0.3
 	github.com/golang/protobuf v1.3.5
 	github.com/mbrostami/go-filemutex v1.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible

@@ -63,7 +63,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		log.SetLevel(cfg.GetLogLevel())
 		// Setup log
 		log.SetFormatter(&nested.Formatter{
-			NoColors: true,
+			NoColors: false,
 		})
 
 		crontask.GUID = xid.New().String() // sortable guid
@@ -105,6 +105,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		}
 
 		// FIXME: Prevent IO Block
+		log.SetOutput(os.Stdout)
 		if cfg.Log.Enable {
 			f, err := os.OpenFile(cfg.Log.Path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 			if err != nil {
@@ -116,8 +117,6 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 				f,
 			)
 			log.SetOutput(writers)
-		} else {
-			log.SetOutput(os.Stdout)
 		}
 
 		// Delay running command
@@ -160,6 +159,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		crontask.Pid = cmd.Process.Pid
 		var statusByRegex = false
 		for output := range stdChan {
+			// output = append(output, []byte("\n")...)
 			crontask.Output = append(crontask.Output, output...)
 			if crontask.FOverride != "" {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
