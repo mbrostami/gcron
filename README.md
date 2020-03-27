@@ -8,6 +8,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - [ ] Clean code!!
 - [ ] Test
 - [ ] Support different log formats for write/stream purpose 
+- [ ] Ignore errors (Run command even if connection is not established)
 - [x] local mutex lock
 - [x] Run cron after given seconds
 - [x] Network shared mutex lock
