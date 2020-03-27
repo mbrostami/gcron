@@ -12,6 +12,7 @@ import (
 
 	"github.com/mbrostami/gcron/configs"
 	"github.com/mbrostami/gcron/cron"
+	"github.com/mbrostami/gcron/grpc"
 	"github.com/mbrostami/gcron/helpers"
 	"github.com/mbrostami/gcron/output"
 	"github.com/mbrostami/gcron/validators"
@@ -150,25 +151,29 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 
 		crontask.StartTime = time.Now()
 		crontask.Success = false
-		cmd.Start()
+		var stream grpc.Gcron_StartLogClient
 		if cfg.Server.RPC.Enabled {
-			grpcHandler.StartLogStream()
+			stream, err = grpcHandler.StartLogStream()
+			if err != nil {
+				log.Fatalf("Stream failed %v", err)
+			}
 		}
+		cmd.Start()
 		crontask.Pid = cmd.Process.Pid
 		var statusByRegex = false
 		for output := range stdChan {
-			// output = append(output, []byte("\n")...)
-			crontask.Output = append(crontask.Output, output...)
 			if crontask.FOverride != "" {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
 			// Stream output
 			if cfg.Server.RPC.Enabled {
-				grpcHandler.Log(crontask.GUID, output)
+				stream.Send(grpcHandler.GetLogEntry(crontask.GUID, output))
 			}
+			output = append(output, []byte("\n")...) // Add new line
+			crontask.Output = append(crontask.Output, output...)
 		}
 		if cfg.Server.RPC.Enabled {
-			grpcHandler.CloseStream()
+			stream.CloseAndRecv()
 		}
 		<-done
 		if crontask.FLock && remoteLock {

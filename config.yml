@@ -26,6 +26,6 @@ out:
     clean: false
 
 log:
-    enable: true
+    enable: false
     level: "warning"
     path: "/var/log/gcron/gcron.log"

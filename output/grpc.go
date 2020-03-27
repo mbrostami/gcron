@@ -2,7 +2,6 @@ package output
 
 import (
 	"context"
-	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
@@ -15,7 +14,6 @@ import (
 type GrpcHandler struct {
 	connection *grpc.ClientConn
 	client     pb.GcronClient
-	stream     pb.Gcron_StartLogClient
 }
 
 // NewGrpcHandler dial connection with rpc server
@@ -50,25 +48,17 @@ func (g GrpcHandler) Release(lockName string) (bool, error) {
 }
 
 // StartLogStream start log stream
-func (g GrpcHandler) StartLogStream() (bool, error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	stream, err := g.client.StartLog(ctx)
+func (g GrpcHandler) StartLogStream() (pb.Gcron_StartLogClient, error) {
+	stream, err := g.client.StartLog(context.Background())
 	if err != nil {
-		return false, err
+		return stream, err
 	}
-	g.stream = stream
-	return true, nil
+	return stream, nil
 }
 
-// Log send log over stream
-func (g GrpcHandler) Log(guid string, message []byte) error {
-	return g.stream.Send(&pb.LogEntry{GUID: guid, Output: message})
-}
-
-// CloseStream close stream
-func (g GrpcHandler) CloseStream() (bool, error) {
-	boolValue, err := g.stream.CloseAndRecv()
-	return boolValue.GetValue(), err
+// GetLogEntry get logEntry
+func (g GrpcHandler) GetLogEntry(guid string, message []byte) *pb.LogEntry {
+	return &pb.LogEntry{GUID: guid, Output: message}
 }
 
 // Done finialize the task
@@ -91,10 +81,10 @@ func (g GrpcHandler) Done(crontask cron.Task) (bool, error) {
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitCode:   int32(crontask.ExitCode),
-		Output:     crontask.Output,
 		SystemTime: ptypes.DurationProto(crontask.SystemTime),
 		UserTime:   ptypes.DurationProto(crontask.UserTime),
 		Success:    crontask.Success,
+		// Output:     crontask.Output, // output already is streamed
 	}
 	finished, err := g.client.Done(context.Background(), grpcTask)
 	if err != nil {

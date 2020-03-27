@@ -5,6 +5,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 
 [gcron-server](https://github.com/mbrostami/gcron-server)
 ## TODO
+- [ ] Clean code!!
 - [ ] Support different log formats for write/stream purpose 
 - [x] local mutex lock
 - [x] Run cron after given seconds
@@ -15,7 +16,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - [x] Trackable id for logs
 - [x] Optional Regex status (Accept regex to change status of the cron to false or true)
   - [x] By default exitCode of the cron command will be used to detect if command was successful or failed
-- [ ] Stream logs over rpc
+- [x] Stream logs over rpc
 
 ## FIXME
 - Delete local lock file
