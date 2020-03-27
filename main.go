@@ -151,6 +151,9 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		crontask.StartTime = time.Now()
 		crontask.Success = false
 		cmd.Start()
+		if cfg.Server.RPC.Enabled {
+			grpcHandler.StartLogStream()
+		}
 		crontask.Pid = cmd.Process.Pid
 		var statusByRegex = false
 		for output := range stdChan {
@@ -159,9 +162,13 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 			if crontask.FOverride != "" {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
+			// Stream output
 			if cfg.Server.RPC.Enabled {
 				grpcHandler.Log(crontask.GUID, output)
 			}
+		}
+		if cfg.Server.RPC.Enabled {
+			grpcHandler.CloseStream()
 		}
 		<-done
 		if crontask.FLock && remoteLock {
@@ -189,7 +196,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		crontask.EndTime = time.Now()
 
 		if cfg.Server.RPC.Enabled {
-			grpcHandler.Finish(crontask)
+			grpcHandler.Done(crontask)
 		}
 		// Log tags
 		if cfg.Out.Tags == true {

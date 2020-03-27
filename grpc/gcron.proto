@@ -12,8 +12,8 @@ service gcron {
     // Release release lock based on (HOSTNAME+USERNAME+UID) or Custom Lock Name
     rpc Release(google.protobuf.StringValue) returns (google.protobuf.BoolValue) {}
 
-    rpc Log(LogEntry) returns (google.protobuf.BoolValue) {}
-    rpc FinializeTask(Task) returns (google.protobuf.BoolValue) {}
+    rpc StartLog(stream LogEntry) returns (google.protobuf.BoolValue) {}
+    rpc Done(Task) returns (google.protobuf.BoolValue) {}
 }
 
 message LogEntry {

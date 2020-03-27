@@ -2,6 +2,7 @@ package output
 
 import (
 	"context"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
@@ -14,6 +15,7 @@ import (
 type GrpcHandler struct {
 	connection *grpc.ClientConn
 	client     pb.GcronClient
+	stream     pb.Gcron_StartLogClient
 }
 
 // NewGrpcHandler dial connection with rpc server
@@ -47,17 +49,30 @@ func (g GrpcHandler) Release(lockName string) (bool, error) {
 	return released.GetValue(), nil
 }
 
-// Log send string
-func (g GrpcHandler) Log(guid string, output []byte) (bool, error) {
-	logged, err := g.client.Log(context.Background(), &pb.LogEntry{GUID: guid, Output: output})
+// StartLogStream start log stream
+func (g GrpcHandler) StartLogStream() (bool, error) {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	stream, err := g.client.StartLog(ctx)
 	if err != nil {
 		return false, err
 	}
-	return logged.GetValue(), nil
+	g.stream = stream
+	return true, nil
 }
 
-// Finish finialize the task
-func (g GrpcHandler) Finish(crontask cron.Task) (bool, error) {
+// Log send log over stream
+func (g GrpcHandler) Log(guid string, message []byte) error {
+	return g.stream.Send(&pb.LogEntry{GUID: guid, Output: message})
+}
+
+// CloseStream close stream
+func (g GrpcHandler) CloseStream() (bool, error) {
+	boolValue, err := g.stream.CloseAndRecv()
+	return boolValue.GetValue(), err
+}
+
+// Done finialize the task
+func (g GrpcHandler) Done(crontask cron.Task) (bool, error) {
 	// FIXME find a mapping solution
 	startTime, _ := ptypes.TimestampProto(crontask.StartTime)
 	endTime, _ := ptypes.TimestampProto(crontask.EndTime)
@@ -81,7 +96,7 @@ func (g GrpcHandler) Finish(crontask cron.Task) (bool, error) {
 		UserTime:   ptypes.DurationProto(crontask.UserTime),
 		Success:    crontask.Success,
 	}
-	finished, err := g.client.FinializeTask(context.Background(), grpcTask)
+	finished, err := g.client.Done(context.Background(), grpcTask)
 	if err != nil {
 		return false, err
 	}
