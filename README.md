@@ -6,6 +6,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 [gcron-server](https://github.com/mbrostami/gcron-server)
 ## TODO
 - [ ] Clean code!!
+- [ ] Test
 - [ ] Support different log formats for write/stream purpose 
 - [x] local mutex lock
 - [x] Run cron after given seconds
