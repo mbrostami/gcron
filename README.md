@@ -20,7 +20,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - [x] Remote mutex lock
 - [x] Local mutex
 - [x] Remote lock based on command
-- [ ] Remote lock timeout
+- [x] Remote lock timeout
 
 ## FIXME
 - Delete local lock file
