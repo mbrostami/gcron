@@ -28,6 +28,7 @@ func main() {
 	flagLockEnabled := flag.Bool("lock.enable", false, "Enable mutex lock")
 	flagLockRemote := flag.Bool("lock.remote", false, "Use rpc mutex lock")
 	flagLockName := flag.String("lock.name", "", "Mutex name")
+	flag.Int("lock.timeout", 60, "Mutex timeout")
 	flagOverride := flag.String("override", "", "Override command status by regex match in output")
 	flagDelay := flag.Int("delay", 0, "Delay running command in seconds")
 	flag.Bool("out.tags", false, "Output tags")
@@ -77,7 +78,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 			grpcHandler, _ = output.NewGrpcHandler(cfg.Server.RPC.Host, cfg.Server.RPC.Port)
 			defer grpcHandler.Close()
 			if crontask.FLock && remoteLock { // remote lock can only be used with rpc
-				locked, _ := grpcHandler.Lock(strconv.FormatUint(uint64(crontask.UID), 10))
+				locked, _ := grpcHandler.Lock(strconv.FormatUint(uint64(crontask.UID), 10), cfg.Lock.Timeout)
 				if !locked {
 					log.Fatal("Task is already running...")
 				}

@@ -17,6 +17,9 @@ type Config struct {
 		Level  string
 		Path   string
 	}
+	Lock struct {
+		Timeout int32
+	}
 	Out struct {
 		Clean bool
 		Tags  bool
