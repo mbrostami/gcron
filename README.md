@@ -9,9 +9,7 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - [ ] Test
 - [ ] Support different log formats for write/stream purpose 
 - [ ] Ignore errors (Run command even if connection is not established)
-- [x] local mutex lock
 - [x] Run cron after given seconds
-- [x] Network shared mutex lock
 - [x] Implement gRPC
 - [x] Send output to remote server (tcp/udp/unix)
 - [x] Configurable tags (mem usage, cpu usage, systime, usertime, ...) (flag/config)
@@ -19,6 +17,10 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 - [x] Optional Regex status (Accept regex to change status of the cron to false or true)
   - [x] By default exitCode of the cron command will be used to detect if command was successful or failed
 - [x] Stream logs over rpc
+- [x] Remote mutex lock
+- [x] Local mutex
+- [x] Remote lock based on command
+- [ ] Remote lock timeout
 
 ## FIXME
 - Delete local lock file

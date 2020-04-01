@@ -31,7 +31,7 @@ func NewGrpcHandler(host string, port string) (GrpcHandler, error) {
 
 // Lock try to lock
 func (g GrpcHandler) Lock(lockName string) (bool, error) {
-	locked, err := g.client.Lock(context.Background(), &wrappers.StringValue{Value: lockName})
+	locked, err := g.client.Lock(context.Background(), &pb.LockMessage{Key: lockName, Timeout: 3})
 	if err != nil {
 		return false, err
 	}

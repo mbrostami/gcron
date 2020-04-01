@@ -7,8 +7,8 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 service gcron {
-    // Lock remote lock based on (HOSTNAME+USERNAME+UID) or Custom Lock Name
-    rpc Lock(google.protobuf.StringValue) returns (google.protobuf.BoolValue) {}
+    // Lock remote lock based on (UID) or Custom Lock Name
+    rpc Lock(LockMessage) returns (google.protobuf.BoolValue) {}
     // Release release lock based on (HOSTNAME+USERNAME+UID) or Custom Lock Name
     rpc Release(google.protobuf.StringValue) returns (google.protobuf.BoolValue) {}
 
@@ -19,6 +19,11 @@ service gcron {
 message LogEntry {
   string GUID = 1;
   bytes Output = 2;
+}
+
+message LockMessage {
+  string key = 1;
+  int32 timeout = 2;
 }
 
 message Task {
