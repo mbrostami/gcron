@@ -4,6 +4,46 @@ Generating report based on logs
 Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc.)  
 
 [gcron-server](https://github.com/mbrostami/gcron-server)
+
+## Usage
+```
+// Delay running command  
+* * * * * gcron -c="echo HelloWorld" --delay=5  
+* * * * * gcron -c="echo HelloWorld" --delay=10  
+* * * * * gcron -c="echo HelloWorld" --delay=15
+
+// Delay running command but avoid duplicate running 
+* * * * * gcron -c="echo HelloWorld" --delay=10 --lock.enable
+* * * * * gcron -c="echo HelloWorld" --delay=20 --lock.enable
+* * * * * gcron -c="echo HelloWorld" --delay=30 --lock.enable
+
+// Mutex lock to prevent overlap same command
+* * * * * gcron -c="sleep 61 && echo HelloWorld" --lock.enable
+
+// Enable logging and log level
+gcron -c="echo HelloWorld" --log.enable --log.level=trace
+
+// Display tags (systime, usertime, duration, etc)
+gcron -c="echo HelloWorld" --log.level=info --out.tags
+
+// Override command status which is stored in tags.status [case sensitive]
+gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*World$" 
+-- [INFO] [status:true]
+gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$" 
+-- [INFO] [status:false]
+
+// Remote mutex lock to prevent overlap same command in multiple servers [gcron-server required]
+* * * * * gcron -c="echo Server1HelloWorld" --lock.enable --lock.remote
+
+
+// Using combination of gcrons
+* * * * * gcron -c="echo SendLogsToGcronServer" --lock.enable --lock.remote --server.rpc.enabled 
+* * * * * gcron -c="echo KeepLogsOnlyInLocal" --log.enable --server.rpc.enabled=0
+* * * * * gcron -c="echo TraceOutputs" --log.enable --log.level=trace --server.rpc.enabled=0
+* * * * * gcron -c="echo RunWithDelay" --delay=5
+
+```  
+
 ## TODO
 - [ ] Clean code!!
 - [ ] Test
@@ -25,33 +65,25 @@ Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc
 ## FIXME
 - Delete local lock file
 
-## Dev
+## Development
 Edit config.yml file and update log.path   
 `go run main.go -c="echo 111 && sleep 1 && echo 222"`   
 `go run main.go -c="git status"`  
 ```
-  -c, --c string                  Command to execute (default "")
-      --delay int                 Delay running command in seconds
-      --lock.enable               Enable mutex lock
-      --lock.remote               Use RPC for mutex lock
-      --lock.name string          Mutex name
-      --log.enable                Enable log
-      --log.level string          Log level (default "warning")
-      --out.hide.duration         Hide duration tag
-      --out.hide.systime          Hide system time tag
-      --out.hide.uid              Hide uid tag
-      --out.hide.usertime         Hide user time tag
-      --out.tags                  Output tags
-      --override string           Override command status by regex match in output
-      --server.rpc.enable         Enable RPC Server
-      --server.rpc.host string    RPC Server host
-      --server.rpc.port string    RPC Server port
-      --server.tcp.enable         Enable TCP Server
-      --server.tcp.host string    TCP Server host
-      --server.tcp.port string    TCP Server port
-      --server.udp.enable         Enable UDP Server
-      --server.udp.host string    UDP Server host
-      --server.udp.port string    UDP Server port
-      --server.unix.enable        Enable Unix socket
-      --server.unix.path string   UNIX socket path (default "/tmp/gcron-server.sock")
+  -c, --c string                 Command to execute
+      --delay int                Delay running command in seconds
+      --lock.enable              Enable mutex lock
+      --lock.name string         Mutex name
+      --lock.remote              Use rpc mutex lock
+      --lock.timeout int         Mutex timeout (default 60)
+      --log.enable               Enable log
+      --log.level string         Log level (default "warning")
+      --out.hide.duration        Hide duration tag
+      --out.hide.systime         Hide system time tag
+      --out.hide.uid             Hide uid tag
+      --out.hide.usertime        Hide user time tag
+      --out.tags                 Output tags
+      --override pattern         Override command status by regex match in output
+      --server.rpc.host string   RPC Server host
+      --server.rpc.port string   RPC Server port
 ```
