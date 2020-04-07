@@ -1,20 +1,9 @@
 
 server:
     rpc:
-        enabled: true
+        enable: true
         host: "localhost"
         port: "1400"
-    tcp: 
-        enabled: false
-        host: "localhost"
-        port: "1401"
-    udp:
-        enabled: false
-        host: "localhost"
-        port: "1402"
-    unix: 
-        enabled: false
-        path: "/tmp/gcron-server.sock"
 
 out:
     hide: 

@@ -36,15 +36,10 @@ func main() {
 	flag.Bool("out.hide.usertime", false, "Hide user time tag")
 	flag.Bool("out.hide.duration", false, "Hide duration tag")
 	flag.Bool("out.hide.uid", false, "Hide uid tag")
-	// flag.Bool("out.clean", false, "Only command output")
 	flag.Bool("log.enable", false, "Enable log")
-	flag.String("server.tcp.port", "", "TCP Server port")
-	flag.String("server.tcp.host", "", "TCP Server host")
-	flag.String("server.udp.host", "", "UDP Server host")
-	flag.String("server.udp.port", "", "UDP Server port")
-	flag.String("server.rpc.host", "", "RPC Server host")
-	flag.String("server.rpc.port", "", "RPC Server port")
-	flag.String("server.unix.path", "/tmp/gcron-server.sock", "UNIX socket path")
+	flag.String("server.rpc.host", "", "remote RPC host")
+	flag.String("server.rpc.port", "", "remote RPC port")
+	flag.String("server.rpc.enable", "", "enable RPC")
 	flag.String("log.level", "warning", "Log level")
 
 	cfg := configs.GetConfig(flag.CommandLine)
@@ -74,7 +69,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		crontask.UID = hash(crontask.Command)
 
 		var grpcHandler output.GrpcHandler
-		if cfg.Server.RPC.Enabled {
+		if cfg.Server.RPC.Enable {
 			grpcHandler, _ = output.NewGrpcHandler(cfg.Server.RPC.Host, cfg.Server.RPC.Port)
 			defer grpcHandler.Close()
 			if crontask.FLock && remoteLock { // remote lock can only be used with rpc
@@ -153,7 +148,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		crontask.StartTime = time.Now()
 		crontask.Success = false
 		var stream grpc.Gcron_StartLogClient
-		if cfg.Server.RPC.Enabled {
+		if cfg.Server.RPC.Enable {
 			stream, err = grpcHandler.StartLogStream()
 			if err != nil {
 				log.Fatalf("Stream failed %v", err)
@@ -167,18 +162,18 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 				statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 			}
 			// Stream output
-			if cfg.Server.RPC.Enabled {
+			if cfg.Server.RPC.Enable {
 				stream.Send(grpcHandler.GetLogEntry(crontask.GUID, output))
 			}
 			output = append(output, []byte("\n")...) // Add new line
 			crontask.Output = append(crontask.Output, output...)
 		}
-		if cfg.Server.RPC.Enabled {
+		if cfg.Server.RPC.Enable {
 			stream.CloseAndRecv()
 		}
 		<-done
 		if crontask.FLock && remoteLock {
-			if cfg.Server.RPC.Enabled {
+			if cfg.Server.RPC.Enable {
 				grpcHandler.Release(strconv.FormatUint(uint64(crontask.UID), 10))
 			}
 		} else if crontask.FLock && !remoteLock {
@@ -201,7 +196,7 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 		crontask.ExitCode = cmd.ProcessState.ExitCode()
 		crontask.EndTime = time.Now()
 
-		if cfg.Server.RPC.Enabled {
+		if cfg.Server.RPC.Enable {
 			grpcHandler.Done(crontask)
 		}
 		// Log tags
@@ -222,28 +217,6 @@ func processCommand(cfg configs.Config, crontask cron.Task, remoteLock bool) {
 			}
 			fields["status"] = crontask.Success
 			log.WithFields(fields).Info("[tags]")
-		}
-		// Send crontask over tcp udp and unix socket
-		// FIXME: Stream output instead of sending all at once
-		if cfg.Server.TCP.Enabled {
-			output.SendOverTCP(
-				cfg.Server.TCP.Host,
-				cfg.Server.TCP.Port,
-				crontask,
-			)
-		}
-		if cfg.Server.UDP.Enabled {
-			output.SendOverUPD(
-				cfg.Server.UDP.Host,
-				cfg.Server.UDP.Port,
-				crontask,
-			)
-		}
-		if cfg.Server.Unix.Enabled {
-			output.SendOverUNIX(
-				cfg.Server.Unix.Path,
-				crontask,
-			)
 		}
 	}
 }

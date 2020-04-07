@@ -32,23 +32,9 @@ type Config struct {
 	}
 	Server struct {
 		RPC struct {
-			Enabled bool
-			Host    string
-			Port    string
-		}
-		TCP struct {
-			Enabled bool
-			Host    string
-			Port    string
-		}
-		UDP struct {
-			Enabled bool
-			Host    string
-			Port    string
-		}
-		Unix struct {
-			Enabled bool
-			Path    string
+			Enable bool
+			Host   string
+			Port   string
 		}
 	}
 }
