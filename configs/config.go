@@ -75,7 +75,7 @@ func processError(err error) {
 func readFile(flagset *flag.FlagSet) *viper.Viper {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("/etc/gcron/")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("./configs/")
 	pflag.CommandLine.AddGoFlagSet(flagset)
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)
