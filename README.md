@@ -1,4 +1,5 @@
-# gcron [In Development]
+[![Build Status](https://travis-ci.com/mbrostami/gcron.svg?branch=master)](https://travis-ci.com/mbrostami/gcron)
+# gcron [In Development] 
 A go written tool to have a cronjob monitoring/reporting/stats. This will help you monitor outputs, status and timing and resource usage per cron.  
 Generating report based on logs  
 Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc.)  
