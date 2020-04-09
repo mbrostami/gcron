@@ -66,7 +66,6 @@ gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$"
 
 ## FIXME
 - Delete local lock file
-- Remove extra output `pflag: help requested` in --help
 
 ## Production
 Download binary file  

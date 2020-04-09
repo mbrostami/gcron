@@ -41,8 +41,13 @@ func main() {
 	flag.String("server.rpc.port", "", "remote RPC port")
 	flag.String("server.rpc.enable", "", "enable RPC")
 	flag.String("log.level", "info", "Log level")
+	usage := flag.Bool("help", false, "Usage")
 
 	cfg := configs.GetConfig(flag.CommandLine)
+	if *usage {
+		flag.Usage()
+		return
+	}
 	crontask := cron.Task{
 		Command:   *executable,
 		FLock:     *flagLockEnabled,
