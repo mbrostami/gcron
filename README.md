@@ -66,7 +66,14 @@ gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$"
 
 ## FIXME
 - Delete local lock file
+- Remove extra output `pflag: help requested` in --help
 
+## Production
+Download binary file  
+Create a config file   
+`mkdir /etc/gcron && touch /etc/gcron/config.yml`  
+Links  
+```ln -s `pwd`/gcron /usr/local/bin/gcron```
 ## Development
 Edit config.yml file and update log.path   
 `go run main.go -c="echo 111 && sleep 1 && echo 222"`   
