@@ -8,6 +8,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/golang/protobuf v1.3.5
 	github.com/mbrostami/go-filemutex v1.1.0
+	github.com/pkg/errors v0.8.0
 	github.com/rs/xid v1.2.1
 	github.com/shirou/gopsutil v2.20.2+incompatible
 	github.com/sirupsen/logrus v1.5.0

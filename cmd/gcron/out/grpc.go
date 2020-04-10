@@ -1,12 +1,13 @@
-package output
+package out
 
 import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/mbrostami/gcron/cron"
-	pb "github.com/mbrostami/gcron/grpc"
+	"github.com/mbrostami/gcron/internal/config"
+	pb "github.com/mbrostami/gcron/internal/grpc"
+	"github.com/mbrostami/gcron/internal/task"
 	"google.golang.org/grpc"
 )
 
@@ -16,21 +17,24 @@ type GrpcHandler struct {
 	client     pb.GcronClient
 }
 
-// NewGrpcHandler dial connection with rpc server
-func NewGrpcHandler(host string, port string) (GrpcHandler, error) {
+// NewHandler make new grpc handler
+func NewHandler(cfg config.GeneralConfig) (*GrpcHandler, error) {
 	var g GrpcHandler
+	host := cfg.GetKey("server.rpc.host").(string)
+	port := cfg.GetKey("server.rpc.port").(string)
+
 	conn, err := grpc.Dial(host+":"+port, grpc.WithInsecure())
 	if err != nil {
-		return g, err
+		return &g, err
 	}
 	g.connection = conn
 	client := pb.NewGcronClient(g.connection)
 	g.client = client
-	return g, nil
+	return &g, nil
 }
 
 // Lock try to lock
-func (g GrpcHandler) Lock(lockName string, timeout int32) (bool, error) {
+func (g *GrpcHandler) Lock(lockName string, timeout int32) (bool, error) {
 	locked, err := g.client.Lock(context.Background(), &pb.LockMessage{Key: lockName, Timeout: timeout})
 	if err != nil {
 		return false, err
@@ -39,7 +43,7 @@ func (g GrpcHandler) Lock(lockName string, timeout int32) (bool, error) {
 }
 
 // Release try to lock
-func (g GrpcHandler) Release(lockName string) (bool, error) {
+func (g *GrpcHandler) Release(lockName string) (bool, error) {
 	released, err := g.client.Release(context.Background(), &wrappers.StringValue{Value: lockName})
 	if err != nil {
 		return false, err
@@ -48,7 +52,7 @@ func (g GrpcHandler) Release(lockName string) (bool, error) {
 }
 
 // StartLogStream start log stream
-func (g GrpcHandler) StartLogStream() (pb.Gcron_StartLogClient, error) {
+func (g *GrpcHandler) StartLogStream() (pb.Gcron_StartLogClient, error) {
 	stream, err := g.client.StartLog(context.Background())
 	if err != nil {
 		return stream, err
@@ -57,12 +61,12 @@ func (g GrpcHandler) StartLogStream() (pb.Gcron_StartLogClient, error) {
 }
 
 // GetLogEntry get logEntry
-func (g GrpcHandler) GetLogEntry(guid string, message []byte) *pb.LogEntry {
+func (g *GrpcHandler) GetLogEntry(guid string, message []byte) *pb.LogEntry {
 	return &pb.LogEntry{GUID: guid, Output: message}
 }
 
 // Done finialize the task
-func (g GrpcHandler) Done(crontask cron.Task) (bool, error) {
+func (g *GrpcHandler) Done(crontask task.Task) (bool, error) {
 	// FIXME find a mapping solution
 	startTime, _ := ptypes.TimestampProto(crontask.StartTime)
 	endTime, _ := ptypes.TimestampProto(crontask.EndTime)
@@ -94,6 +98,6 @@ func (g GrpcHandler) Done(crontask cron.Task) (bool, error) {
 }
 
 // Close close the connection
-func (g GrpcHandler) Close() {
+func (g *GrpcHandler) Close() {
 	g.connection.Close()
 }

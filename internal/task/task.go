@@ -1,6 +1,13 @@
-package cron
+package task
 
-import "time"
+import (
+	"hash/fnv"
+	"os"
+	"time"
+
+	"github.com/pkg/errors"
+	"github.com/rs/xid"
+)
 
 // Task keeps cronjob information
 type Task struct {
@@ -24,10 +31,25 @@ type Task struct {
 	Success    bool
 }
 
+// SetBasics set defaults
+func (task Task) SetBasics() {
+	task.GUID = xid.New().String()
+	hostname, _ := os.Hostname()
+	task.Hostname = hostname
+	task.UID = hash(task.Command)
+}
+
 // Validate the command
-func (task Task) Validate() bool {
+func (task Task) Validate() (bool, error) {
 	if task.Command != "" {
-		return true
+		return true, nil
 	}
-	return false
+	err := errors.Errorf("Command %s is not valie", task.Command)
+	return false, err
+}
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
 }

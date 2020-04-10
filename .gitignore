@@ -1,4 +1,2 @@
 *.log
 *.code-workspace
-*.back
-gcron

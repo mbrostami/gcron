@@ -1,9 +1,9 @@
 
 server:
     rpc:
-        enable: true
+        enable: false
         host: "localhost"
-        port: "1400"
+        port: "1401"
 
 out:
     hide: 

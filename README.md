@@ -46,11 +46,11 @@ gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$"
 ```  
 
 ## TODO
-- [ ] Clean code!!
+- [ ] More Clean code!!
+- [X] Clean code!!
 - [ ] Test
 - [ ] Support different log formats for write/stream purpose 
 - [ ] Ignore errors (Run command even if connection is not established)
-- [ ] Using workers pool 
 - [x] Run cron after given seconds
 - [x] Implement gRPC
 - [x] Send output to remote server (tcp/udp/unix)
