@@ -44,7 +44,7 @@ func (task Task) Validate() (bool, error) {
 	if task.Command != "" {
 		return true, nil
 	}
-	err := errors.Errorf("Command %s is not valie", task.Command)
+	err := errors.Errorf("Command %s is not valid (see -c option)", task.Command)
 	return false, err
 }
 

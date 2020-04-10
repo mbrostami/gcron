@@ -6,7 +6,7 @@ before:
 
 builds:
   -
-    main: ./cmd/gcron/main.go 
+    main: ./cmd/gcron/
 
 # - env:
 #   - CGO_ENABLED=0
