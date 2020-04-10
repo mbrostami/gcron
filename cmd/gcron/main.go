@@ -71,7 +71,7 @@ func main() {
 	if crontask.FLock {
 		locked, err := mtx.Lock(lockName, lockTimeout)
 		if !locked {
-			log.Fatal("Task is already running... %s", err.Error())
+			log.Fatalf("Task is already running... %s", err.Error())
 		}
 	}
 
