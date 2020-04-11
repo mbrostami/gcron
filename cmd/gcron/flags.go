@@ -2,11 +2,22 @@ package main
 
 import "flag"
 
+// FlagCommand Command to execute
 const FlagCommand string = "c"
+
+// FlagHelp Show usage
 const FlagHelp string = "help"
+
+// FlagLockEnable Mutex lock
 const FlagLockEnable string = "lock.enable"
+
+// FlagLockName Custom lock name
 const FlagLockName string = "lock.name"
+
+// FlagOverride Override command status
 const FlagOverride string = "override"
+
+// FlagDelay Delay running command
 const FlagDelay string = "delay"
 
 // InitFlags initialize flags
