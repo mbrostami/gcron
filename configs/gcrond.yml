@@ -1,0 +1,18 @@
+
+server:
+    web:
+        host: "localhost"
+        port: "1401"
+    rpc: 
+        host: "localhost"
+        port: "1400"
+
+log:
+    enable: false
+    level: "info"
+    path: "/var/log/gcron/gcron-server.log"
+
+web: 
+    auth:
+        user: "admin"
+        pass: "admin"

@@ -21,7 +21,7 @@ var cfg config.GeneralConfig
 var mtx mutex.Interface
 
 func main() {
-	cfg = config.GetConfig(InitFlags())
+	cfg = config.GetConfig("gcron", InitFlags())
 	// initialize logs
 	fd := logs.Initialize(cfg)
 	defer fd.Close()
@@ -101,7 +101,7 @@ func main() {
 
 	var statusByRegex = false
 	for output := range outputCh {
-		log.Debugf("%s", string(output))
+		log.Infof("%s", string(output))
 		if crontask.FOverride != "" {
 			statusByRegex = statusByRegex || validators.NewRegex(crontask.FOverride).Validate(string(output))
 		}

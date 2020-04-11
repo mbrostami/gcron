@@ -1,53 +1,130 @@
 [![Build Status](https://travis-ci.com/mbrostami/gcron.svg?branch=master)](https://travis-ci.com/mbrostami/gcron)
 # gcron [In Development] 
-A go written tool to have a cronjob monitoring/reporting/stats. This will help you monitor outputs, status and timing and resource usage per cron.  
-Generating report based on logs  
-Stream cron outputs to remote servers (GCron server, Syslog server, logstash etc.)  
 
-[gcron-server](https://github.com/mbrostami/gcron-server)
+### Features
+- Skip a command's execution if the previous run is not completed yet
+- Delay a command's execution
+- Log a command's output plus stats (systime, usrtime, status, duration, ...)
+- Centalize all logs in gcrond server 
+- GUI server interface
+- Override command status by using regex pattern
+- Skip a command's execution if the previous run IN OTHER SERVER is not completed yet
+- IN PROGRESS 
+  - Duration graph in command page (gcrond)
+  - Status graph in command page (gcrond) 
 
-## Usage
+
+### gcron IS NOT
+- Cron job manager
+- Job scheduler
+
+# Usage 
+### gcron usage
+
 ```
-// Delay running command  
-* * * * * gcron -c="echo HelloWorld" --delay=5  
-* * * * * gcron -c="echo HelloWorld" --delay=10  
-* * * * * gcron -c="echo HelloWorld" --delay=15
+gcron --help  
 
-// Delay running command but avoid duplicate running 
-* * * * * gcron -c="echo HelloWorld" --delay=10 --lock.enable
-* * * * * gcron -c="echo HelloWorld" --delay=20 --lock.enable
-* * * * * gcron -c="echo HelloWorld" --delay=30 --lock.enable
+  --c                        (string) Command to execute
+  --delay int                (int)    Delay running command in seconds
+  --lock.enable              (bool)   Enable mutex lock
+  --lock.name                (string) Custom mutex name
+  --lock.remote              (bool)   Use rpc mutex lock
+  --lock.timeout             (int)    Mutex timeout (default 60)
+  --log.enable               (bool)   Enable log
+  --log.level                (string) Log level (default "warning")
+  --out.hide.duration        (bool)   Hide duration tag
+  --out.hide.systime         (bool)   Hide system time tag
+  --out.hide.uid             (bool)   Hide uid tag
+  --out.hide.usertime        (bool)   Hide user time tag
+  --out.tags                 (bool)   Output tags
+  --override                 (string) Regex pattern to override command status (match in command output)
+  --server.rpc.enable        (bool)   Enable RPC Server
+  --server.rpc.host          (string) RPC Server host
+  --server.rpc.port          (string) RPC Server port
+```
 
-// Mutex lock to prevent overlap same command
-* * * * * gcron -c="sleep 61 && echo HelloWorld" --lock.enable
+### gcrond usage
 
-// Enable logging and log level
-gcron -c="echo HelloWorld" --log.enable --log.level=trace
+```
+gcrond --help  
 
-// Display tags (systime, usertime, duration, etc)
-gcron -c="echo HelloWorld" --log.level=info --out.tags
-
-// Override command status which is stored in tags.status [case sensitive]
-gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*World$" 
--- [INFO] [status:true]
-gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$" 
--- [INFO] [status:false]
-
-// Remote mutex lock to prevent overlap same command in multiple servers [gcron-server required]
-* * * * * gcron -c="echo Server1HelloWorld" --lock.enable --lock.remote
+  --log.enable               (bool)   Enable log
+  --log.level                (string) Log level (default "warning")
+  --server.rpc.host          (bool)   Enable RPC Server
+  --server.rpc.host          (string) RPC Server host
+  --server.rpc.port          (string) RPC Server port
+```
 
 
-// Using combination of gcrons
-* * * * * gcron -c="echo SendLogsToGcronServer" --lock.enable --lock.remote --server.rpc.enabled 
-* * * * * gcron -c="echo KeepLogsOnlyInLocal" --log.enable --server.rpc.enabled=0
-* * * * * gcron -c="echo TraceOutputs" --log.enable --log.level=trace --server.rpc.enabled=0
-* * * * * gcron -c="echo RunWithDelay" --delay=5
+# Examples
 
+#### Delay running command  
+```
+gcron -c="echo HelloWorld" --delay=5
 ```  
 
+#### Delay running command but avoid duplicate running  
+```
+gcron -c="echo HelloWorld" --delay=10 --lock.enable
+```  
+
+#### Mutex lock to prevent overlap same command  
+```
+gcron -c="sleep 61 && echo HelloWorld" --lock.enable
+```   
+
+#### Enable logging and log level  
+```
+gcron -c="echo HelloWorld" --log.enable --log.level=trace
+``` 
+
+#### Display tags (systime, usertime, duration, etc)  
+```
+gcron -c="echo HelloWorld" --log.level=info --out.tags
+```
+
+#### Override command status which is stored in tags.status [case sensitive]  
+```
+gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*World$"
+gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$" 
+```
+
+#### Remote mutex lock to prevent overlap same command in multiple servers  
+Server
+```
+gcrond --log.level=trace  
+```
+Client
+```
+gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remote
+```
+
+
+#### Using gcron as cron
+```
+* * * * * gcron -c="echo Delay5seconds" --delay=5
+* * * * * gcron -c="echo Delay5seconds" --delay=10
+* * * * * gcron -c="echo Delay5seconds" --delay=15
+
+
+* * * * * gcron -c="echo LocalLock" --lock.enable
+
+
+* * * * * gcron -c="echo ServerLock" --server.rpc.enable --lock.enable --lock.remote
+```  
+
+# Screenshots
+#### Main Page
+![Main Page](./assets/MainPage.png)
+#### Task Details
+![Task Page](./assets/CommandPage.png)
+
+
 ## TODO
-- [ ] More Clean code!!
-- [X] Clean code!!
+
+### gcron
+- [ ] Cleaner code!!
+- [X] Clean code
 - [ ] Test
 - [ ] Support different log formats for write/stream purpose 
 - [ ] Ignore errors (Run command even if connection is not established)
@@ -64,34 +141,41 @@ gcron -c="echo HelloWorld" --log.level=info --out.tags --override=".*Worl$"
 - [x] Remote lock based on command
 - [x] Remote lock timeout
 
+### gcrond 
+- [ ] Cleaner code!
+- [ ] Write tests
+- [x] Implement shared lock for clients
+- [x] Migrate mutex from file locking to use db
+- [x] Mutex client timeout
+- [x] Pick high performance database to store all logs (search optimised, hash O(1) read support)
+- [x] GUI
+  - [x] Authentication
+  - [x] Use FE framework (uikit, npm, webpack)
+  - [ ] Search logs (tag, hostname, uid, command, guid, output)
+  - [x] Bundle JS with webpack
+  - [ ] Bundle CSS with webpack
+- [ ] Log stream proxy... (remote third party log server, REST Api, tcp/udp)
+- [ ] TLS enabled over RPC
+- [ ] Client authentication + (caching system)
+- [ ] Async write (Get stream logs and write in database async)
+- [ ] Handle connection timeouts
+- [ ] Customized taging clientside
+- [ ] Support different clients (syslog, ...)
+- [ ] Fix casts int32 to int or int64 to int32
+- [ ] Live reloading config file
+
+
 ## FIXME
 - Delete local lock file
 
 ## Production
 Download binary file  
-Create a config file   
-`mkdir /etc/gcron && touch /etc/gcron/config.yml`  
 Links  
 ```ln -s `pwd`/gcron /usr/local/bin/gcron```
+
 ## Development
-Edit config.yml file and update log.path   
-`go run main.go -c="echo 111 && sleep 1 && echo 222"`   
-`go run main.go -c="git status"`  
-```
-  -c, --c string                 Command to execute
-      --delay int                Delay running command in seconds
-      --lock.enable              Enable mutex lock
-      --lock.name string         Mutex name
-      --lock.remote              Use rpc mutex lock
-      --lock.timeout int         Mutex timeout (default 60)
-      --log.enable               Enable log
-      --log.level string         Log level (default "warning")
-      --out.hide.duration        Hide duration tag
-      --out.hide.systime         Hide system time tag
-      --out.hide.uid             Hide uid tag
-      --out.hide.usertime        Hide user time tag
-      --out.tags                 Output tags
-      --override pattern         Override command status by regex match in output
-      --server.rpc.host string   RPC Server host
-      --server.rpc.port string   RPC Server port
-```
+
+`go run cmd/gcron/* -c="git status" --log.level=debug`   
+
+`go run cmd/gcrond/* -log.level=trace`
+

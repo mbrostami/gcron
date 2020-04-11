@@ -14,9 +14,9 @@ type Config struct {
 }
 
 // GetConfig returns the configuration map
-func GetConfig(flagset *flag.FlagSet) Config {
+func GetConfig(configName string, flagset *flag.FlagSet) Config {
 	var cfg Config
-	lviper := cfg.readFile(flagset)
+	lviper := cfg.readFile(configName, flagset)
 	cfg.lviper = lviper
 	return cfg
 }
@@ -45,8 +45,8 @@ func (cfg Config) GetLogLevel() log.Level {
 	}
 }
 
-func (cfg Config) readFile(flagset *flag.FlagSet) *viper.Viper {
-	viper.SetConfigName("config")
+func (cfg Config) readFile(configName string, flagset *flag.FlagSet) *viper.Viper {
+	viper.SetConfigName(configName)
 	viper.AddConfigPath("/etc/gcron/")
 	viper.AddConfigPath("./configs/")
 	pflag.CommandLine.AddGoFlagSet(flagset)

@@ -32,7 +32,7 @@ type Task struct {
 }
 
 // SetBasics set defaults
-func (task Task) SetBasics() {
+func (task *Task) SetBasics() {
 	task.GUID = xid.New().String()
 	hostname, _ := os.Hostname()
 	task.Hostname = hostname
@@ -40,7 +40,7 @@ func (task Task) SetBasics() {
 }
 
 // Validate the command
-func (task Task) Validate() (bool, error) {
+func (task *Task) Validate() (bool, error) {
 	if task.Command != "" {
 		return true, nil
 	}

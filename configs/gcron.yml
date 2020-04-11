@@ -3,7 +3,7 @@ server:
     rpc:
         enable: false
         host: "localhost"
-        port: "1401"
+        port: "1400"
 
 out:
     hide: 

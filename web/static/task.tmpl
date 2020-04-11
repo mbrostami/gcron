@@ -1,0 +1,42 @@
+
+{{ template "header.tmpl" . }}
+
+<h1>{{ .command.Command }}<span class="uk-text-small uk-align-right">#{{ .command.UID }}</span></h1>
+{{if .message}} 
+    <h3>{{.message}}</h3>
+{{end}}
+
+<ul class="uk-list uk-list-divider uk-dark uk-padding" uk-accordion>
+{{range $element := .tasks}}
+    <li>
+        <div class="uk-accordion-title">
+            {{if $element.Success}}
+                <span class="uk-label uk-label-success">{{$element.StartTime.Seconds | secondsToDate}}</span>
+            {{else}}
+                <span class="uk-label uk-label-danger">{{$element.StartTime.Seconds | secondsToDate}}</span>
+            {{end}}
+            <a href="#">Duration: {{$element | getDuration}}s - Host: {{$element.Hostname}} </a>
+        </div>
+        <div class="uk-accordion-content">
+            <div class="uk-light uk-background-secondary uk-padding">
+                <p>
+                -- PID: {{$element.Pid}} <br>
+                -- UID: {{$element.UID}} <br>
+                -- GUID: {{$element.GUID}} <br>
+                -- Username: {{$element.Username}} <br>
+                -- Parent: {{$element.Parent}} <br>
+                -- Hostname: {{$element.Hostname}} <br>
+                -- UserTime: {{$element.UserTime.Nanos | nanoToMili}} ms<br>
+                -- SystemTime: {{$element.SystemTime.Nanos | nanoToMili}} ms<br>
+                -- StartTime: {{$element.StartTime.Seconds | secondsToDate}} <br>
+                -- EndTime: {{$element.EndTime.Seconds | secondsToDate}} <br><br>
+                # {{$element.Command}} <br>
+                {{ $element.Output | byteToString }}
+                </p>
+            </div>
+        </div>
+    </li>
+{{end}}
+</ul>
+
+{{ template "footer.tmpl" }}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html class="no-js" lang="en">
+    <head>
+        <title>Title</title>
+    </head>
+    <body>
+        <div class="uk-container">
+            <nav class="uk-navbar-container" uk-navbar>
+                <div class="uk-navbar-left">
+                    <ul class="uk-navbar-nav">
+                        {{ if .user }}
+                            <li class="uk-active"><a href="/">Main Page</a></li>
+                            <li class="uk-active"><a href="/logout">Logout</a></li>
+                        {{ else }}
+                            <li class="uk-active"><a href="/login">Login</a></li>
+                        {{ end }}
+                    </ul>
+                </div>
+            </nav>

@@ -1,0 +1,31 @@
+{{ template "header.tmpl" . }}
+
+<h1>Authentication</h1>
+
+{{if .message}} 
+    <div class="uk-alert-primary" uk-alert>
+        <a class="uk-alert-close" uk-close></a>
+        <p>{{.message}}</p>
+    </div>
+{{ else if .error}} 
+    <div class="uk-alert-danger" uk-alert>
+        <a class="uk-alert-close" uk-close></a>
+        <p>{{.error}}</p>
+    </div>
+{{end}}
+<form method="post">
+   <fieldset class="uk-fieldset">
+        <legend class="uk-legend">Login</legend>
+        <div class="uk-margin">
+            <input class="uk-input" name="username" type="text" placeholder="Input">
+        </div>
+         <div class="uk-margin">
+            <input class="uk-input" name="password" type="password" placeholder="Input">
+        </div>
+         <div class="uk-margin">
+            <button class="uk-button uk-button-primary">Login</button>
+        </div>
+    </fieldset>
+</form>
+
+{{ template "footer.tmpl" }}
