@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/mbrostami/gcron.svg?branch=master)](https://travis-ci.com/mbrostami/gcron)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mbrostami/gcron)](https://goreportcard.com/report/github.com/mbrostami/gcron)
 # gcron [In Development] 
 
 ### Features
