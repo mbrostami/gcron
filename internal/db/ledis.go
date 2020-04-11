@@ -60,7 +60,7 @@ func (l LedisDB) Store(uid uint32, task *pb.Task) (string, error) {
 // Get members of a key
 func (l LedisDB) Get(uid uint32, start int, stop int) *TaskCollection {
 	byteKeys := (*[4]byte)(unsafe.Pointer(&uid))[:] // 32 bit id (4 byte)
-	scorePairs, _ := l.db.ZRange(byteKeys, start, stop)
+	scorePairs, _ := l.db.ZRevRange(byteKeys, start, stop)
 	tasks := make(map[int]*pb.Task)
 	for index, scorePair := range scorePairs {
 		score := scorePair.Score

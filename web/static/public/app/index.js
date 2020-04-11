@@ -1,4 +1,5 @@
 import './css/style.css';
+import Chart from 'chart.js'
 import UIkit from 'uikit';
 import Icons from 'uikit/dist/js/uikit-icons';
 

@@ -6,6 +6,8 @@
     <h3>{{.message}}</h3>
 {{end}}
 
+<canvas id="taskChart"  height="100"></canvas>
+
 <ul class="uk-list uk-list-divider uk-dark uk-padding" uk-accordion>
 {{range $element := .tasks}}
     <li>
@@ -15,7 +17,9 @@
             {{else}}
                 <span class="uk-label uk-label-danger">{{$element.StartTime.Seconds | secondsToDate}}</span>
             {{end}}
-            <a href="#">Duration: {{$element | getDuration}}s - Host: {{$element.Hostname}} </a>
+            <a href="#">{{ $element.Output | subStringOfByte }} </a>
+            <span class="uk-label uk-label-primary uk-align-right uk-margin-small-bottom uk-margin-small-left">{{ $element.Username }}</span>
+            <span class="uk-label uk-label-primary uk-align-right uk-margin-small-bottom uk-margin-small-left">{{$element | getDuration}} s</span>
         </div>
         <div class="uk-accordion-content">
             <div class="uk-light uk-background-secondary uk-padding">
@@ -39,4 +43,50 @@
 {{end}}
 </ul>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        var ctx = document.getElementById('taskChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+    
+            // The data for our dataset
+            data: {
+                labels: {{ .xAxis | stringArrayToJson }},
+                datasets: [{
+                    fill: false,
+                    label: 'Duration',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: {{ .yAxis | floatArrayToJson }}
+                }]
+            },
+    
+            // Configuration options go here
+            options: {
+                responsive: true,
+                scales: {
+                    yAxes: [{
+                        display: true,
+                        ticks: {
+                            min: 0,
+                            stepSize: 0.5
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Duration'
+						}
+					}],
+                    xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'Time'
+						}
+					}]
+                }
+            }
+        });
+    });
+</script>
 {{ template "footer.tmpl" }}

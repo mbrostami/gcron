@@ -6,13 +6,11 @@
 - Skip a command's execution if the previous run is not completed yet
 - Delay a command's execution
 - Log a command's output plus stats (systime, usrtime, status, duration, ...)
-- Centalize all logs in gcrond server 
-- GUI server interface
 - Override command status by using regex pattern
-- Skip a command's execution if the previous run IN OTHER SERVER is not completed yet
-- IN PROGRESS 
-  - Duration graph in command page (gcrond)
-  - Status graph in command page (gcrond) 
+- Skip a command's execution if the previous run IN OTHER SERVER is not completed yet (gcrond)
+- Centalize all logs in gcrond server  (gcrond)
+- GUI server interface (gcrond)
+- Duration graph in command page (gcrond)
 
 
 ### gcron IS NOT
@@ -155,6 +153,7 @@ gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remot
   - [ ] Search logs (tag, hostname, uid, command, guid, output)
   - [x] Bundle JS with webpack
   - [ ] Bundle CSS with webpack
+  - [x] Command page duration graph
 - [ ] Log stream proxy... (remote third party log server, REST Api, tcp/udp)
 - [ ] TLS enabled over RPC
 - [ ] Client authentication + (caching system)

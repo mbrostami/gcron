@@ -3,6 +3,7 @@ package web
 import (
 	// Import the gorilla/mux library we just installed
 
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/mbrostami/gcron/internal/config"
 	"github.com/mbrostami/gcron/internal/db"
 	pb "github.com/mbrostami/gcron/internal/grpc"
+	"github.com/mbrostami/gcron/pkg/formatters"
 	"github.com/mbrostami/gcron/web/pages"
 	log "github.com/sirupsen/logrus"
 )
@@ -94,14 +96,36 @@ func loadTemplate() (*template.Template, error) {
 			return template.HTML(res)
 		},
 	}).Funcs(template.FuncMap{
+		"stringArrayToJson": func(array []string) template.JS {
+			var res string
+			encjson, _ := json.Marshal(array)
+			res = string(encjson)
+			log.Debugf("TemplateFunction: stringArrayToJson %v, %v", array, res)
+			return template.JS(res)
+		},
+	}).Funcs(template.FuncMap{
+		"floatArrayToJson": func(array []float64) template.JS {
+			var res string
+			log.Debugf("TemplateFunction: floatArrayToJson %v, %v", array, res)
+			encjson, _ := json.Marshal(array)
+			res = string(encjson)
+			return template.JS(res)
+		},
+	}).Funcs(template.FuncMap{
+		"subStringOfByte": func(value []byte) template.HTML {
+			res := []rune(string(value))
+			len := len(res)
+			result := string(value)
+			if len > 50 {
+				result = string(res[0:50]) + " ... "
+			}
+			log.Debugf("TemplateFunction: subStringOfByte %v to %v", string(value), result)
+			return template.HTML(result)
+		},
+	}).Funcs(template.FuncMap{
 		"getDuration": func(task *pb.Task) string {
-			durationSecond := task.EndTime.Seconds - task.StartTime.Seconds
-			duration := fmt.Sprintf(
-				"%d.%d",
-				durationSecond,
-				int32(task.EndTime.Nanos-task.StartTime.Nanos)/int32(time.Millisecond),
-			)
-			return duration
+			value, _ := formatters.GetTimestampDiffMS(task.StartTime, task.EndTime)
+			return fmt.Sprintf("%.2f", value)
 		},
 	})
 	_, err := t.ParseGlob("web/static/*.tmpl")

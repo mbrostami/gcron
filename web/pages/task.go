@@ -3,10 +3,12 @@ package pages
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mbrostami/gcron/internal/db"
 	pb "github.com/mbrostami/gcron/internal/grpc"
+	"github.com/mbrostami/gcron/pkg/formatters"
 )
 
 // TaskPage using Page interface
@@ -53,14 +55,23 @@ func (p *TaskPage) Handler(method string, c *gin.Context) Response {
 
 	// As all tasks coming by uid has same command
 	// Get first one to extract command name
-	var command *pb.Task
-	for _, task := range taskCollection.Tasks {
-		command = task
-		break
+	command := taskCollection.Tasks[0]
+	var xAxis []string
+	var yAxis []float64
+	var task *pb.Task
+	// Make sorted list
+	for i := len(taskCollection.Tasks) - 1; i >= 0; i-- {
+		task = taskCollection.Tasks[i]
+		startTimeUTC := time.Unix(task.StartTime.Seconds, 0)
+		xAxis = append(xAxis, startTimeUTC.Format("15:04:05"))
+		floatVal, _ := formatters.GetTimestampDiffMS(task.StartTime, task.EndTime)
+		yAxis = append(yAxis, floatVal)
 	}
 	res = gin.H{
 		"user":    user,
 		"command": command,
+		"xAxis":   xAxis,
+		"yAxis":   yAxis,
 		"tasks":   taskCollection.Tasks,
 	}
 	c.HTML(200, "task.tmpl", res)
