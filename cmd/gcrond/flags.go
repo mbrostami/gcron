@@ -11,5 +11,6 @@ func InitFlags() *flag.FlagSet {
 	flag.String("server.rpc.port", "", "RPC Server listening port")
 	flag.String("server.web.host", "", "Web server listening host")
 	flag.String("server.web.port", "", "Web server listening port")
+	flag.String("web.static", "", "Web serve path")
 	return flag.CommandLine
 }

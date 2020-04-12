@@ -6,6 +6,8 @@ server:
     rpc: 
         host: "localhost"
         port: "1400"
+db: 
+    dataDir: "/var/lib/gcrond/data"
 
 log:
     enable: false

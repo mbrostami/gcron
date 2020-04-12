@@ -20,8 +20,9 @@ type LedisDB struct {
 }
 
 // NewLedis create ledisdb instance
-func NewLedis() *LedisDB {
+func NewLedis(dataDir string) *LedisDB {
 	cfg := config.NewConfigDefault()
+	cfg.DataDir = dataDir
 	ledis, err := ledis.Open(cfg)
 	if err != nil {
 		log.Fatalf("DB Connect error! %v", err)

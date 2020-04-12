@@ -17,7 +17,8 @@ func main() {
 	defer fd.Close()
 
 	var dbAdapter db.DB
-	dbAdapter = db.NewLedis()
+	dataDir := cfg.GetKey("db.dataDir").(string)
+	dbAdapter = db.NewLedis(dataDir)
 
 	// Run in second thread
 	go web.Listen(dbAdapter, cfg)
