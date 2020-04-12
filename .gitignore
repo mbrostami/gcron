@@ -1,6 +1,6 @@
 *.log
 *.code-workspace
-var
-gcron
-gcrond
 .DS_Store
+/var
+/gcron
+/gcrond
