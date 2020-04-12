@@ -18,7 +18,7 @@ require (
 	github.com/pkg/errors v0.8.0
 	github.com/rs/xid v1.2.1
 	github.com/shirou/gopsutil v2.20.2+incompatible
-	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
+	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/siddontang/ledisdb v0.0.0-20190202134119-8ceb77e66a92
 	github.com/siddontang/rdb v0.0.0-20150307021120-fc89ed2e418d // indirect
 	github.com/sirupsen/logrus v1.5.0
@@ -26,7 +26,6 @@ require (
 	github.com/spf13/viper v1.6.2
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
-	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/genproto v0.0.0-20200325114520-5b2d0af7952b // indirect
 	google.golang.org/grpc v1.28.0
 )
