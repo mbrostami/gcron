@@ -24,8 +24,10 @@ import (
 // Listen start web server
 func Listen(db db.DB, cfg config.GeneralConfig) {
 	// gin.DefaultWriter = log.StandardLogger().Writer()
+	staticPath := cfg.GetKey("web.static").(string)
+
 	r := gin.Default()
-	t, _ := loadTemplate()
+	t, _ := loadTemplate(staticPath)
 	r.SetHTMLTemplate(t)
 
 	r.Use(sessions.Sessions("mysession", sessions.NewCookieStore([]byte("secret"))))
@@ -34,7 +36,7 @@ func Listen(db db.DB, cfg config.GeneralConfig) {
 	authUser := cfg.GetKey("web.auth.user").(string)
 	authPath := cfg.GetKey("web.auth.pass").(string)
 	addPublicPage(r, pages.NewLoginPage(authUser, authPath))
-	r.Use(static.Serve("/", static.LocalFile("web/static/public", false)))
+	r.Use(static.Serve("/", static.LocalFile(staticPath+"/public", false)))
 	authorized := r.Group("/")
 	authorized.Use(authRequired)
 	{
@@ -74,7 +76,7 @@ func addRouterPage(r *gin.RouterGroup, page pages.Page) {
 	}
 }
 
-func loadTemplate() (*template.Template, error) {
+func loadTemplate(staticPath string) (*template.Template, error) {
 	t := template.New("")
 	t.Funcs(template.FuncMap{
 		"byteToString": func(value []byte) template.HTML {
@@ -128,6 +130,6 @@ func loadTemplate() (*template.Template, error) {
 			return fmt.Sprintf("%.2f", value)
 		},
 	})
-	_, err := t.ParseGlob("web/static/*.tmpl")
+	_, err := t.ParseGlob(staticPath + "/*.tmpl")
 	return t, err
 }

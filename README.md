@@ -114,10 +114,11 @@ gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remot
 
 # Screenshots
 #### Main Page
-![Main Page](./assets/MainPage.png)
+![Main page](./assets/MainPage.png)
+#### Task Duration Graph
+![Task duration](./assets/CommandGraph.png)
 #### Task Details
-![Task Page](./assets/CommandPage.png)
-
+![Task info](./assets/CommandPage.png)
 
 ## TODO
 
@@ -163,7 +164,7 @@ gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remot
 - [ ] Support different clients (syslog, ...)
 - [ ] Fix casts int32 to int or int64 to int32
 - [ ] Live reloading config file
-
+- [ ] MakeFile
 
 ## FIXME
 - Delete local lock file

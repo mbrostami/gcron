@@ -13,7 +13,7 @@ log:
     path: "/var/log/gcron/gcrond.log"
 
 web: 
-    static: "web/static"
+    static: "/var/www/gcron/web/static"
     auth:
         user: "admin"
         pass: "admin"
