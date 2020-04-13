@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/mbrostami/gcron.svg?branch=master)](https://travis-ci.com/mbrostami/gcron)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mbrostami/gcron)](https://goreportcard.com/report/github.com/mbrostami/gcron)
+[ ![Download](https://api.bintray.com/packages/mbrostami/gcron/gcron/images/download.svg?version=v2.0.3) ](https://bintray.com/mbrostami/gcron/gcron/v2.0.3/link)
 # gcron [In Development] 
 
 ### Features
