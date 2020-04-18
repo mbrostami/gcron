@@ -18,41 +18,68 @@
 - Cron job manager
 - Job scheduler
 
+![Workflow](./assets/Graph.jpg)
+
+# Install
+
+Download one of the packages in release assets    
+Install gcron (agent)   
+`dpkg -i gcron_*_Tux_64-bit.deb`    
+
+
+[Optional]   
+If you  want to use GUI or centralized logging server   
+Install gcrond (server)   
+`dpkg -i gcrond_*_Tux_64-bit.deb`   
+
+
+Configuration can be found in `/etc/gcron/gcron.yml` and `/etc/gcron/gcrond.yml`  
+
 # Usage 
-### gcron usage
+### gcron usage (agent)
 
 ```
 gcron --help  
 
   --c                        (string) Command to execute
+  
   --delay int                (int)    Delay running command in seconds
+  
   --lock.enable              (bool)   Enable mutex lock
   --lock.name                (string) Custom mutex name
   --lock.remote              (bool)   Use rpc mutex lock
   --lock.timeout             (int)    Mutex timeout (default 60)
+  
   --log.enable               (bool)   Enable log
   --log.level                (string) Log level (default "warning")
+  
   --out.hide.duration        (bool)   Hide duration tag
   --out.hide.systime         (bool)   Hide system time tag
   --out.hide.uid             (bool)   Hide uid tag
   --out.hide.usertime        (bool)   Hide user time tag
   --out.tags                 (bool)   Output tags
+  
   --override                 (string) Regex pattern to override command status (match in command output)
-  --server.rpc.enable        (bool)   Enable RPC Server
-  --server.rpc.host          (string) RPC Server host
-  --server.rpc.port          (string) RPC Server port
+  
+  --server.rpc.enable        (bool)   Enable using gcrond
+  --server.rpc.host          (string) gcrond host
+  --server.rpc.port          (string) gcrond port
 ```
 
-### gcrond usage
+### gcrond usage (server)
 
 ```
 gcrond --help  
 
   --log.enable               (bool)   Enable log
   --log.level                (string) Log level (default "warning")
-  --server.rpc.host          (bool)   Enable RPC Server
+  --log.path                 (string) Log file location
+  
   --server.rpc.host          (string) RPC Server host
   --server.rpc.port          (string) RPC Server port
+
+  --server.web.host          (string) Web server host
+  --server.web.port          (string) Web server port
 ```
 
 
@@ -123,7 +150,7 @@ gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remot
 
 ## TODO
 
-### gcron
+### gcron (agent)
 - [ ] Cleaner code!!
 - [X] Clean code
 - [ ] Test
@@ -141,8 +168,9 @@ gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remot
 - [x] Local mutex
 - [x] Remote lock based on command
 - [x] Remote lock timeout
+- [ ] Log rotation
 
-### gcrond 
+### gcrond (server)
 - [ ] Cleaner code!
 - [ ] Write tests
 - [x] Implement shared lock for clients
@@ -165,15 +193,10 @@ gcron -c="echo Server1HelloWorld" --server.rpc.enable --lock.enable --lock.remot
 - [ ] Support different clients (syslog, ...)
 - [ ] Fix casts int32 to int or int64 to int32
 - [ ] Live reloading config file
-- [ ] MakeFile
+- [ ] Log rotation / expire time
 
 ## FIXME
 - Delete local lock file
-
-## Production
-Download binary file  
-Links  
-```ln -s `pwd`/gcron /usr/local/bin/gcron```
 
 ## Development
 
